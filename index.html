@@ -6,11 +6,15 @@
     <title>Gestão Marcos Muniz - Gravações</title>
     <style>
         :root { --primary: #1e40af; --accent: #3b82f6; --bg: #f1f5f9; --text: #0f172a; --danger: #ef4444; --success: #059669; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; margin: 0; }
-        .container { max-width: 1100px; margin: 20px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+        .container { max-width: 1100px; margin: 20px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; }
         
+        /* Cabeçalho com Logo e Título */
         .header-site { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
-        .logo-box img { max-height: 80px; display: block; }
+        .logo-container { display: flex; align-items: center; gap: 15px; }
+        .logo-container img { max-height: 70px; width: auto; }
+        .brand-name { font-size: 1.8rem; font-weight: bold; color: var(--primary); }
+        
         .header-actions { display: flex; gap: 10px; }
         
         .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
@@ -31,11 +35,15 @@
         .finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; padding: 20px; background: #1e293b; color: white; border-radius: 8px; }
         .summary-card p { margin: 5px 0 0; font-size: 1.4rem; font-weight: bold; }
 
+        /* Rodapé do Site */
+        .footer-site { text-align: center; padding: 20px; font-size: 0.85rem; color: #64748b; border-top: 1px solid #e2e8f0; margin-top: 40px; }
+
         @media print { 
-            .container, .btn, .search-area, .form-section, .finance-summary, .header-actions { display: none !important; } 
+            .container, .btn, .search-area, .form-section, .finance-summary, .header-actions, .footer-site { display: none !important; } 
             .print-only { display: block !important; } 
-            .notinha { border: 1px solid #000; padding: 20px; width: 100%; max-width: 500px; margin: auto; font-family: Courier, monospace; } 
-            .linha { display: flex; justify-content: space-between; margin: 5px 0; } 
+            .notinha { border: 1px solid #000; padding: 20px; width: 100%; max-width: 550px; margin: auto; font-family: Courier, monospace; position: relative; } 
+            .linha { display: flex; justify-content: space-between; margin: 5px 0; }
+            .print-footer { text-align: center; margin-top: 30px; border-top: 1px dashed #000; padding-top: 10px; font-size: 0.8rem; }
         }
         .print-only { display: none; }
     </style>
@@ -44,8 +52,9 @@
 
 <div class="container">
     <div class="header-site">
-        <div class="logo-box">
-            <img src="logomarcos.png" alt="Logo Gestão Marcos Muniz" onerror="this.alt='Logo não encontrada'">
+        <div class="logo-container">
+            <img src="logomarcos.png" alt="Logo" onerror="this.style.display='none'">
+            <span class="brand-name">Gestão Marcos Muniz - Gravações</span>
         </div>
         <div class="header-actions">
             <button class="btn btn-backup" onclick="exportarBackup()">💾 Backup</button>
@@ -56,7 +65,7 @@
     
     <div class="form-section">
         <div class="full-width"><label>Cliente</label><input type="text" id="cliente" placeholder="Nome do cliente"></div>
-        <div class="full-width"><label>Serviço (Escreva 'Pagamento' para abater valor)</label><input type="text" id="servico" placeholder="Descrição do trabalho"></div>
+        <div class="full-width"><label>Serviço (Escreva 'Pagamento' para abater valor)</label><input type="text" id="servico" placeholder="Ex: Gravação em Copo ou Pagamento"></div>
         <div><label>Data</label><input type="date" id="data"></div>
         <div><label>Qtd</label><input type="number" id="quantidade" value="1" oninput="calcular()"></div>
         <div><label>V. Unit (R$)</label><input type="number" id="valorUnit" step="0.01" oninput="calcular()"></div>
@@ -67,12 +76,12 @@
 
     <div class="search-area">
         <label>🔎 Filtrar por Cliente para Extrato:</label>
-        <input type="text" id="filtro" placeholder="Digite nome ou código..." onkeyup="atualizarTabela()">
-        <button class="btn btn-print" onclick="gerarExtrato()">Gerar Extrato com Abatimentos</button>
+        <input type="text" id="filtro" placeholder="Digite nome para filtrar..." onkeyup="atualizarTabela()">
+        <button class="btn btn-print" onclick="gerarExtrato()">Gerar Extrato Detalhado</button>
     </div>
 
     <table>
-        <thead><tr><th>Cód.</th><th>Data</th><th>Cliente</th><th>Serviço</th><th>Valor Total</th><th>Valor Pago</th><th>Ação</th></tr></thead>
+        <thead><tr><th>Cód.</th><th>Data</th><th>Cliente</th><th>Serviço</th><th>V. Total</th><th>V. Pago</th><th>Ação</th></tr></thead>
         <tbody id="tabelaBody"></tbody>
     </table>
 
@@ -83,10 +92,15 @@
     </div>
 </div>
 
+<footer class="footer-site">
+    Sistema de Gestão Marcos Muniz &copy; 2026 - Todos os Direitos Reservados. <br>
+    <strong>Lembrete:</strong> Realize o Backup CSV regularmente para segurança dos seus dados.
+</footer>
+
 <div id="areaImpressao" class="print-only"></div>
 
 <script>
-    let dados = JSON.parse(localStorage.getItem('servicos_v19')) || [];
+    let dados = JSON.parse(localStorage.getItem('servicos_v20')) || [];
     let codigosClientes = JSON.parse(localStorage.getItem('codigos_clientes')) || {};
     document.getElementById('data').valueAsDate = new Date();
 
@@ -108,8 +122,7 @@
         const pag = parseFloat(document.getElementById('valorPago').value) || 0;
 
         if(!cli || !ser) return alert("Preencha Nome e Serviço.");
-        if(tot === 0 && pag === 0) return alert("Insira um valor total ou valor pago.");
-
+        
         const nomeN = cli.toUpperCase();
         if(!codigosClientes[nomeN]) codigosClientes[nomeN] = Math.floor(1000 + Math.random() * 9000);
         
@@ -119,7 +132,7 @@
     }
 
     function salvar() {
-        localStorage.setItem('servicos_v19', JSON.stringify(dados));
+        localStorage.setItem('servicos_v20', JSON.stringify(dados));
         localStorage.setItem('codigos_clientes', JSON.stringify(codigosClientes));
         atualizarTabela();
     }
@@ -132,7 +145,7 @@
         document.getElementById('valorPago').value = '0';
     }
 
-    function excluir(id) { if(confirm("Remover registro?")) { dados = dados.filter(d => d.id !== id); salvar(); } }
+    function excluir(id) { if(confirm("Remover este registro permanentemente?")) { dados = dados.filter(d => d.id !== id); salvar(); } }
 
     function atualizarTabela() {
         const f = document.getElementById('filtro').value.toLowerCase();
@@ -145,7 +158,7 @@
         document.getElementById('totalAberto').innerText = `R$ ${formatarMoeda(sG - sP)}`;
         document.getElementById('totalGeral').innerText = `R$ ${formatarMoeda(sG)}`;
 
-        dados.filter(d => d.cli.toLowerCase().includes(f) || d.cod.toString().includes(f)).forEach(d => {
+        dados.filter(d => d.cli.toLowerCase().includes(f) || d.cod.toString().includes(f)).reverse().forEach(d => {
             body.innerHTML += `<tr>
                 <td>#${d.cod}</td>
                 <td>${d.dat.split('-').reverse().join('/')}</td>
@@ -161,29 +174,35 @@
     function gerarExtrato() {
         const f = document.getElementById('filtro').value.toLowerCase();
         const filtrados = dados.filter(d => d.cli.toLowerCase().includes(f) || d.cod.toString().includes(f));
-        if(!f || filtrados.length === 0) return alert("Filtre um cliente para gerar o extrato.");
+        if(!f || filtrados.length === 0) return alert("Filtre um cliente pelo nome para gerar o extrato.");
 
         let sT = 0, sP = 0, itens = '';
-        filtrados.forEach(i => {
+        filtrados.sort((a, b) => new Date(a.dat) - new Date(b.dat)).forEach(i => {
             sT += i.tot; sP += i.pag;
-            const textoServico = i.ser.toUpperCase() === 'PAGAMENTO' ? `🟢 ${i.ser}` : i.ser;
-            itens += `<div class="linha"><span>${textoServico} (${i.dat.split('-').reverse().join('/')})</span><span>R$ ${formatarMoeda(i.tot > 0 ? i.tot : i.pag)}</span></div>`;
+            const labelServico = i.ser.toUpperCase() === 'PAGAMENTO' ? `PAGAMENTO RECEBIDO` : i.ser;
+            const valorLinha = i.tot > 0 ? i.tot : i.pag;
+            itens += `<div class="linha"><span>${labelServico} (${i.dat.split('-').reverse().join('/')})</span><span>R$ ${formatarMoeda(valorLinha)}</span></div>`;
         });
 
         document.getElementById('areaImpressao').innerHTML = `
             <div class="notinha">
-                <h3 style="text-align:center;">EXTRATO DE CONTA</h3>
-                <p><strong>CLIENTE:</strong> ${filtrados[0].cli.toUpperCase()}</p>
-                <hr>
-                ${itens}
-                <div style="margin-top:10px; border-top: 1px solid #000; padding-top:10px;">
-                    <div class="linha"><strong>TOTAL SERVIÇOS:</strong><span>R$ ${formatarMoeda(sT)}</span></div>
+                <h2 style="text-align:center; margin-bottom:5px;">MARCOS MUNIZ</h2>
+                <h4 style="text-align:center; margin-top:0; border-bottom:1px solid #000; padding-bottom:10px;">EXTRATO DE SERVIÇOS E PAGAMENTOS</h4>
+                <p><strong>CLIENTE:</strong> ${filtrados[0].cli.toUpperCase()} (ID #${filtrados[0].cod})</p>
+                <div style="border-top: 1px solid #000; padding-top:10px;">
+                    ${itens}
+                </div>
+                <div style="margin-top:20px; border-top: 2px solid #000; padding-top:10px;">
+                    <div class="linha"><strong>TOTAL EM SERVIÇOS:</strong><span>R$ ${formatarMoeda(sT)}</span></div>
                     <div class="linha"><strong>TOTAL PAGO:</strong><span>R$ ${formatarMoeda(sP)}</span></div>
-                    <div class="linha" style="font-size:1.2em; border-top: 1px dashed #000; margin-top:5px;">
+                    <div class="linha" style="font-size:1.3em; margin-top:10px; border-top: 1px dashed #000; padding-top:5px;">
                         <strong>SALDO DEVEDOR:</strong><span>R$ ${formatarMoeda(sT - sP)}</span>
                     </div>
                 </div>
-                <p style="text-align:center; font-size:0.7em; margin-top:20px;">Gestão Marcos Muniz - Gravações</p>
+                <div class="print-footer">
+                    Sistema de Gestão Marcos Muniz - Gravações a Laser<br>
+                    Gerado em: ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}
+                </div>
             </div>`;
         window.print();
     }
@@ -194,7 +213,7 @@
         const blob = new Blob([csv], { type: 'text/csv' });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = `backup_marcos_muniz.csv`;
+        a.download = `backup_marcos_muniz_v20.csv`;
         a.click();
     }
 
@@ -212,7 +231,7 @@
                 });
                 codigosClientes[c[2].toUpperCase()] = parseInt(c[1]);
             }
-            if(confirm("Restaurar dados do backup?")) { dados = novos; salvar(); }
+            if(confirm("Confirmar restauração de dados?")) { dados = novos; salvar(); }
         };
         reader.readAsText(event.target.files[0]);
     }
@@ -220,4 +239,28 @@
     atualizarTabela();
 </script>
 </body>
+
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyA5gVffkit4xmKNoa_LqJoJ9Y8oIVXbyds",
+    authDomain: "gestao-marcos-muniz.firebaseapp.com",
+    projectId: "gestao-marcos-muniz",
+    storageBucket: "gestao-marcos-muniz.firebasestorage.app",
+    messagingSenderId: "411380800053",
+    appId: "1:411380800053:web:89505012dc2520b29aef7c",
+    measurementId: "G-1CQDSFZEQC"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </html>
