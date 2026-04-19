@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão Marcos Muniz</title>
     <style>
-        :root { --primary: #1e40af; --success: #059669; --danger: #ef4444; --bg: #f1f5f9; }
+        :root { --primary: #1e40af; --success: #059669; --danger: #ef4444; --bg: #f1f5f9; --edit: #2563eb; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 20px; display: flex; flex-direction: column; min-height: 95vh; }
         .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex: 1; }
         
@@ -24,16 +24,16 @@
         th, td { border-bottom: 1px solid #e2e8f0; padding: 12px; text-align: left; }
         th { background: #f1f5f9; }
         
+        .btn-action { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; border-radius: 4px; }
+        .btn-edit { color: var(--edit); margin-right: 8px; }
+        .btn-del { color: var(--danger); }
+        .btn-edit:hover { background: #dbeafe; }
+        .btn-del:hover { background: #fee2e2; }
+
         .search-box { margin-top: 30px; padding: 15px; background: #eff6ff; border-radius: 8px; }
-        
-        /* Rodapé do Site */
         .site-footer { text-align: center; padding: 20px; font-size: 0.85rem; color: #64748b; margin-top: 20px; }
         
-        @media print { 
-            .no-print { display: none; } 
-            #areaPrint { display: block !important; width: 100%; margin: 0; padding: 0; }
-            body { background: white; padding: 0; }
-        }
+        @media print { .no-print { display: none; } #areaPrint { display: block !important; width: 100%; } }
     </style>
 </head>
 <body>
@@ -51,7 +51,7 @@
     <div class="grid">
         <div><label>Cód. Cliente</label><input type="text" id="cod" onkeyup="auto()"></div>
         <div style="grid-column: span 2;"><label>Nome do Cliente</label><input type="text" id="cli"></div>
-        <div style="grid-column: span 2;"><label>Serviço (Escreva 'Pagamento' para abater)</label><input type="text" id="ser"></div>
+        <div style="grid-column: span 2;"><label>Serviço (ou 'Pagamento')</label><input type="text" id="ser"></div>
         <div><label>Data</label><input type="date" id="dat"></div>
         <div><label>Qtd</label><input type="number" id="qtd" value="1" oninput="calc()"></div>
         <div><label>V. Unit (R$)</label><input type="text" id="vun" oninput="calc()"></div>
@@ -62,7 +62,7 @@
     <button class="btn btn-save" onclick="salvar()">Salvar Registro</button>
 
     <div class="search-box">
-        <input type="text" id="busca" placeholder="Filtrar cliente..." onkeyup="listar()">
+        <input type="text" id="busca" placeholder="Filtrar por nome ou código..." onkeyup="listar()">
         <button class="btn" style="background:var(--success); width:100%; margin-top:10px;" onclick="imprimir()">Gerar Extrato do Cliente</button>
     </div>
 
@@ -81,6 +81,8 @@
 
 <script>
     let db = JSON.parse(localStorage.getItem('muniz_data')) || [];
+    let editId = null;
+
     document.getElementById('dat').valueAsDate = new Date();
 
     function n(v) { return parseFloat(v.toString().replace(',', '.')) || 0; }
@@ -99,7 +101,7 @@
 
     function salvar() {
         const r = {
-            id: Date.now(),
+            id: editId || Date.now(),
             cod: document.getElementById('cod').value,
             cli: document.getElementById('cli').value,
             ser: document.getElementById('ser').value,
@@ -107,14 +109,44 @@
             vto: n(document.getElementById('vto').value),
             vpa: n(document.getElementById('vpa').value)
         };
+
         if(!r.cli || !r.ser) return;
-        db.push(r);
+
+        if(editId) {
+            db = db.map(item => item.id === editId ? r : item);
+            editId = null;
+        } else {
+            db.push(r);
+        }
+
         localStorage.setItem('muniz_data', JSON.stringify(db));
+        limparCampos();
+        listar();
+    }
+
+    function limparCampos() {
+        document.getElementById('cod').value = "";
+        document.getElementById('cli').value = "";
         document.getElementById('ser').value = "";
         document.getElementById('vun').value = "";
         document.getElementById('vto').value = "";
         document.getElementById('vpa').value = "0";
-        listar();
+        document.getElementById('qtd').value = "1";
+        document.getElementById('dat').valueAsDate = new Date();
+    }
+
+    function editar(id) {
+        const r = db.find(item => item.id === id);
+        if(r) {
+            document.getElementById('cod').value = r.cod;
+            document.getElementById('cli').value = r.cli;
+            document.getElementById('ser').value = r.ser;
+            document.getElementById('dat').value = r.dat;
+            document.getElementById('vto').value = r.vto.toFixed(2).replace('.', ',');
+            document.getElementById('vpa').value = r.vpa;
+            editId = id;
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
     }
 
     function listar() {
@@ -124,12 +156,15 @@
                 <td>#${r.cod}</td><td>${r.dat.split('-').reverse().join('/')}</td>
                 <td>${r.cli}</td><td>${r.ser}</td>
                 <td>R$ ${m(r.vto)}</td><td>R$ ${m(r.vpa)}</td>
-                <td><button onclick="del(${r.id})">🗑️</button></td>
+                <td>
+                    <button class="btn-action btn-edit" title="Editar" onclick="editar(${r.id})">📝</button>
+                    <button class="btn-action btn-del" title="Excluir" onclick="del(${r.id})">🗑️</button>
+                </td>
             </tr>`).join('');
         document.getElementById('corpo').innerHTML = h;
     }
 
-    function del(id) { if(confirm("Excluir?")) { db = db.filter(r => r.id !== id); localStorage.setItem('muniz_data', JSON.stringify(db)); listar(); } }
+    function del(id) { if(confirm("Excluir este registro?")) { db = db.filter(r => r.id !== id); localStorage.setItem('muniz_data', JSON.stringify(db)); listar(); } }
 
     function imprimir() {
         const f = document.getElementById('busca').value;
@@ -138,38 +173,33 @@
 
         let sT = 0, sP = 0;
         const linhas = lista.map(r => {
-            // Se o serviço contiver a palavra "Pagamento", ele soma no Total Pago e não no Total de Serviços
-            if(r.ser.toLowerCase().includes("pagamento")) {
-                sP += (r.vto + r.vpa);
-            } else {
-                sT += r.vto;
-                sP += r.vpa;
-            }
-            return `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px 0; font-size:14px;">
+            if(r.ser.toLowerCase().includes("pagamento")) { sP += (r.vto + r.vpa); } 
+            else { sT += r.vto; sP += r.vpa; }
+            return `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px 0;">
                 <span>${r.ser} (${r.dat.split('-').reverse().join('/')})</span>
                 <span>R$ ${m(r.vto + r.vpa)}</span>
             </div>`;
         }).join('');
 
         const html = `
-            <div style="padding:30px; font-family:sans-serif; border:1px solid #000; margin: 10px; box-sizing:border-box;">
-                <h2 style="text-align:center; color:#1e40af; margin-bottom:5px;">MARCOS MUNIZ</h2>
-                <p style="text-align:center; margin-top:0; font-size:14px;">EXTRATO DE SERVIÇOS E PAGAMENTOS</p>
+            <div style="padding:30px; font-family:sans-serif; border:1px solid #000;">
+                <h2 style="text-align:center; color:#1e40af;">MARCOS MUNIZ</h2>
+                <p style="text-align:center; margin-top:-10px;">EXTRATO DE SERVIÇOS E PAGAMENTOS</p>
                 <hr>
                 <p><strong>CLIENTE:</strong> ${lista[0].cli} (#${lista[0].cod})</p>
-                <div style="margin:20px 0;">${linhas}</div>
+                ${linhas}
                 <div style="text-align:right; margin-top:20px; border-top:2px solid #000; padding-top:10px;">
-                    <p style="margin:5px 0;">TOTAL EM SERVIÇOS: R$ ${m(sT)}</p>
-                    <p style="margin:5px 0;">TOTAL PAGO: R$ ${m(sP)}</p>
-                    <h3 style="background:#f1f5f9; padding:10px; display:inline-block; margin-top:10px;">SALDO DEVEDOR: R$ ${m(sT - sP)}</h3>
+                    <p>TOTAL SERVIÇOS: R$ ${m(sT)}</p>
+                    <p>TOTAL PAGO: R$ ${m(sP)}</p>
+                    <h3 style="background:#f1f5f9; padding:10px; display:inline-block;">SALDO DEVEDOR: R$ ${m(sT - sP)}</h3>
                 </div>
-                <div style="margin-top:50px; text-align:center; font-size:12px; font-weight:bold;">
+                <div style="margin-top:40px; text-align:center; font-size:12px; font-weight:bold;">
                     Marcos Muniz - Obrigado pela Preferência!
                 </div>
             </div>`;
         
         const w = window.open('', '');
-        w.document.write(`<html><body style="margin:0; padding:10px;">${html}</body></html>`);
+        w.document.write(`<html><body style="margin:0; padding:20px;">${html}</body></html>`);
         w.document.close();
         w.print();
         w.close();
