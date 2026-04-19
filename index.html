@@ -6,8 +6,8 @@
     <title>Gestão Marcos Muniz</title>
     <style>
         :root { --primary: #1e40af; --success: #059669; --danger: #ef4444; --bg: #f1f5f9; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 20px; }
-        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 20px; display: flex; flex-direction: column; min-height: 95vh; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex: 1; }
         
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 15px; }
         .logo-area { font-weight: bold; color: var(--primary); font-size: 24px; }
@@ -26,11 +26,13 @@
         
         .search-box { margin-top: 30px; padding: 15px; background: #eff6ff; border-radius: 8px; }
         
+        /* Rodapé do Site */
+        .site-footer { text-align: center; padding: 20px; font-size: 0.85rem; color: #64748b; margin-top: 20px; }
+        
         @media print { 
             .no-print { display: none; } 
             #areaPrint { display: block !important; width: 100%; margin: 0; padding: 0; }
             body { background: white; padding: 0; }
-            .container { box-shadow: none; width: 100%; max-width: 100%; }
         }
     </style>
 </head>
@@ -49,7 +51,7 @@
     <div class="grid">
         <div><label>Cód. Cliente</label><input type="text" id="cod" onkeyup="auto()"></div>
         <div style="grid-column: span 2;"><label>Nome do Cliente</label><input type="text" id="cli"></div>
-        <div style="grid-column: span 2;"><label>Serviço (ou 'Pagamento')</label><input type="text" id="ser"></div>
+        <div style="grid-column: span 2;"><label>Serviço (Escreva 'Pagamento' para abater)</label><input type="text" id="ser"></div>
         <div><label>Data</label><input type="date" id="dat"></div>
         <div><label>Qtd</label><input type="number" id="qtd" value="1" oninput="calc()"></div>
         <div><label>V. Unit (R$)</label><input type="text" id="vun" oninput="calc()"></div>
@@ -69,6 +71,11 @@
         <tbody id="corpo"></tbody>
     </table>
 </div>
+
+<footer class="site-footer no-print">
+    Todos os Direitos reservados. Marcos Muniz - Gravações a Laser. <br>
+    Criado em: 19/04/2026
+</footer>
 
 <div id="areaPrint"></div>
 
@@ -100,7 +107,7 @@
             vto: n(document.getElementById('vto').value),
             vpa: n(document.getElementById('vpa').value)
         };
-        if(!r.cli) return;
+        if(!r.cli || !r.ser) return;
         db.push(r);
         localStorage.setItem('muniz_data', JSON.stringify(db));
         document.getElementById('ser').value = "";
@@ -131,33 +138,38 @@
 
         let sT = 0, sP = 0;
         const linhas = lista.map(r => {
-            sT += r.vto; sP += r.vpa;
-            return `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px 0;">
+            // Se o serviço contiver a palavra "Pagamento", ele soma no Total Pago e não no Total de Serviços
+            if(r.ser.toLowerCase().includes("pagamento")) {
+                sP += (r.vto + r.vpa);
+            } else {
+                sT += r.vto;
+                sP += r.vpa;
+            }
+            return `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px 0; font-size:14px;">
                 <span>${r.ser} (${r.dat.split('-').reverse().join('/')})</span>
-                <span>R$ ${m(r.vto || r.vpa)}</span>
+                <span>R$ ${m(r.vto + r.vpa)}</span>
             </div>`;
         }).join('');
 
         const html = `
-            <div style="padding:20px; font-family:sans-serif; border:1px solid #000; max-width:100%; box-sizing:border-box;">
-                <h2 style="text-align:center; color:#1e40af;">MARCOS MUNIZ</h2>
-                <p style="text-align:center; margin-top:-15px;">EXTRATO DE SERVIÇOS E PAGAMENTOS</p>
+            <div style="padding:30px; font-family:sans-serif; border:1px solid #000; margin: 10px; box-sizing:border-box;">
+                <h2 style="text-align:center; color:#1e40af; margin-bottom:5px;">MARCOS MUNIZ</h2>
+                <p style="text-align:center; margin-top:0; font-size:14px;">EXTRATO DE SERVIÇOS E PAGAMENTOS</p>
                 <hr>
                 <p><strong>CLIENTE:</strong> ${lista[0].cli} (#${lista[0].cod})</p>
-                ${linhas}
-                <div style="text-align:right; margin-top:20px;">
-                    <p>TOTAL SERVIÇOS: R$ ${m(sT)}</p>
-                    <p>TOTAL PAGO: R$ ${m(sP)}</p>
-                    <h3 style="background:#f1f5f9; padding:5px;">SALDO DEVEDOR: R$ ${m(sT - sP)}</h3>
+                <div style="margin:20px 0;">${linhas}</div>
+                <div style="text-align:right; margin-top:20px; border-top:2px solid #000; padding-top:10px;">
+                    <p style="margin:5px 0;">TOTAL EM SERVIÇOS: R$ ${m(sT)}</p>
+                    <p style="margin:5px 0;">TOTAL PAGO: R$ ${m(sP)}</p>
+                    <h3 style="background:#f1f5f9; padding:10px; display:inline-block; margin-top:10px;">SALDO DEVEDOR: R$ ${m(sT - sP)}</h3>
                 </div>
-                <div style="margin-top:40px; text-align:center; font-size:10px; border-top:1px solid #000; padding-top:10px;">
-                    Todos os Direitos reservados. Marcos Muniz - Gravações a Laser.<br>
-                    Gerado em: ${new Date().toLocaleString()}
+                <div style="margin-top:50px; text-align:center; font-size:12px; font-weight:bold;">
+                    Marcos Muniz - Obrigado pela Preferência!
                 </div>
             </div>`;
         
         const w = window.open('', '');
-        w.document.write(`<html><body style="margin:0; padding:20px;">${html}</body></html>`);
+        w.document.write(`<html><body style="margin:0; padding:10px;">${html}</body></html>`);
         w.document.close();
         w.print();
         w.close();
@@ -167,7 +179,7 @@
         const b = new Blob([JSON.stringify(db)], {type:'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(b);
-        a.download = 'backup.json';
+        a.download = 'backup_muniz.json';
         a.click();
     }
 
