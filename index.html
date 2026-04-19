@@ -9,233 +9,206 @@
     
     <style>
         :root { --primary: #1e40af; --accent: #3b82f6; --bg: #f1f5f9; --text: #0f172a; --danger: #ef4444; --success: #059669; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        .container { max-width: 1150px; margin: 20px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 1150px; margin: 20px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .header-site { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
-        .logo-container { display: flex; align-items: center; gap: 15px; }
-        .logo-container img { max-height: 60px; width: auto; }
-        .brand-name { font-size: 1.6rem; font-weight: bold; color: var(--primary); }
-        .header-actions { display: flex; align-items: center; gap: 10px; }
         .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
-        .full-width { grid-column: 1 / -1; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
         input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
-        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
-        .btn-print { background: var(--success); }
+        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 1rem; }
+        .btn:hover { background: #1a368e; }
         .btn-backup { background: #1e293b; font-size: 0.75rem; padding: 8px 12px; width: auto; margin: 0; }
-        .btn-delete { background: var(--danger); color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; }
-        .search-area { margin: 25px 0; padding: 15px; background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
         th { background: #f1f5f9; }
-        .finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; padding: 20px; background: #1e293b; color: white; border-radius: 8px; }
-        .summary-card p { margin: 5px 0 0; font-size: 1.4rem; font-weight: bold; }
-        @media print { .container, .btn, .search-area, .form-section, .finance-summary, .header-actions { display: none !important; } .print-only { display: block !important; } .notinha { border: 1px solid #000; padding: 20px; width: 100%; max-width: 550px; margin: auto; font-family: Courier, monospace; } .linha { display: flex; justify-content: space-between; margin: 5px 0; } }
-        .print-only { display: none; }
+        .btn-delete { background: var(--danger); color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; }
+        @media print { body * { visibility: hidden; } #areaImpressao, #areaImpressao * { visibility: visible; } #areaImpressao { position: absolute; left: 0; top: 0; width: 100%; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header-site">
-        <div class="logo-container">
-            <img src="logomarcos.png" alt="Logo" onerror="this.style.display='none'">
-            <span class="brand-name">Gestão Marcos Muniz</span>
-        </div>
-        <div class="header-actions">
-            <span id="status-cloud" style="color: var(--success); font-size: 0.8rem; font-weight: bold;">● ONLINE</span>
-            <button class="btn btn-backup" onclick="exportarBackup()">💾 Backup CSV</button>
+        <h1 style="color:var(--primary); margin:0;">Gestão Marcos Muniz</h1>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-backup" onclick="exportarCSV()">💾 Backup</button>
             <button class="btn btn-backup" style="background:#64748b" onclick="document.getElementById('inputArquivo').click()">📂 Restaurar</button>
-            <input type="file" id="inputArquivo" accept=".csv" style="display:none" onchange="importarBackup(event)">
+            <input type="file" id="inputArquivo" style="display:none" onchange="importarCSV(event)">
         </div>
     </div>
     
     <div class="form-section">
-        <div><label>Cód. Cliente</label><input type="number" id="codCliente" placeholder="0000" onkeyup="buscarClientePorCodigo()"></div>
-        <div style="grid-column: span 2;"><label>Nome do Cliente</label><input type="text" id="cliente" placeholder="Nome completo"></div>
-        <div style="grid-column: span 3;"><label>Serviço (ou 'Pagamento')</label><input type="text" id="servico" placeholder="Ex: Gravação Laser"></div>
+        <div><label>Cód. Cliente</label><input type="text" id="codCliente" onkeyup="buscarNomeAutomatico()"></div>
+        <div style="grid-column: span 2;"><label>Nome do Cliente</label><input type="text" id="cliente"></div>
+        <div style="grid-column: span 3;"><label>Serviço / Produto</label><input type="text" id="servico"></div>
         <div><label>Data</label><input type="date" id="data"></div>
-        <div><label>Qtd</label><input type="number" id="quantidade" value="1" oninput="calcular()"></div>
-        <div><label>V. Unit (R$)</label><input type="number" id="valorUnit" step="0.01" oninput="calcular()"></div>
-        <div><label>V. Total (R$)</label><input type="number" id="valorTotal" readonly></div>
-        <div><label>V. Pago (R$)</label><input type="number" id="valorPago" step="0.01" value="0"></div>
+        <div><label>Qtd</label><input type="number" id="quantidade" value="1" oninput="calcularTotal()"></div>
+        <div><label>V. Unit (R$)</label><input type="text" id="valorUnit" oninput="calcularTotal()"></div>
+        <div><label>V. Total (R$)</label><input type="text" id="valorTotal" readonly></div>
+        <div><label>V. Pago (R$)</label><input type="text" id="valorPago" value="0"></div>
     </div>
-    <button class="btn" onclick="adicionar()">Salvar Registro no Servidor</button>
+    
+    <button id="btnSalvar" class="btn" onclick="salvarDados()">Salvar Registro no Servidor</button>
 
-    <div class="search-area">
-        <input type="text" id="filtro" placeholder="Filtrar por nome ou código..." onkeyup="atualizarTabela()">
-        <button class="btn btn-print" onclick="gerarExtrato()">Gerar Extrato Completo</button>
+    <div style="margin-top:25px; padding:15px; background:#eff6ff; border-radius:8px;">
+        <input type="text" id="filtro" placeholder="Filtrar por nome ou código..." onkeyup="atualizarTabela()" style="margin-bottom:10px;">
+        <button class="btn" style="background:var(--success); margin:0;" onclick="gerarExtrato()">Gerar Extrato do Cliente Filtrado</button>
     </div>
 
     <table>
-        <thead><tr><th>Cód.</th><th>Data</th><th>Cliente</th><th>Serviço</th><th>V. Total</th><th>V. Pago</th><th>Ação</th></tr></thead>
+        <thead><tr><th>Cód.</th><th>Data</th><th>Cliente</th><th>Serviço</th><th>Total</th><th>Pago</th><th>Ação</th></tr></thead>
         <tbody id="tabelaBody"></tbody>
     </table>
-
-    <div class="finance-summary">
-        <div class="summary-card"><h4>Total Recebido</h4><p style="color: #86efac" id="totalRecebido">R$ 0,00</p></div>
-        <div class="summary-card"><h4>Saldo Devedor</h4><p style="color: #fca5a5" id="totalAberto">R$ 0,00</p></div>
-    </div>
 </div>
 
-<div id="areaImpressao" class="print-only"></div>
+<div id="areaImpressao"></div>
 
 <script>
+    // Inicialização do Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyA5gVffkit4xmKNoa_LqJoJ9Y8oIVXbyds",
         authDomain: "gestao-marcos-muniz.firebaseapp.com",
         projectId: "gestao-marcos-muniz",
-        storageBucket: "gestao-marcos-muniz.firebasestorage.app",
-        messagingSenderId: "411380800053",
-        appId: "1:411380800053:web:89505012dc2520b29aef7c",
         databaseURL: "https://gestao-marcos-muniz-default-rtdb.firebaseio.com/"
     };
-
+    
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database().ref('servicos_cloud');
-    let dadosLocais = [];
-    let mapaClientes = {};
+    const database = firebase.database();
+    const refVendas = database.ref('vendas_v3'); // Nova versão para evitar conflito de dados
 
+    let todosRegistros = [];
     document.getElementById('data').valueAsDate = new Date();
 
-    function formatarMoeda(valor) {
-        return parseFloat(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Converte vírgula para ponto para o sistema entender números
+    function formatarNumero(valor) {
+        if(!valor) return 0;
+        let n = valor.toString().replace(/\./g, '').replace(',', '.');
+        return parseFloat(n) || 0;
     }
 
-    function calcular() {
-        const q = parseFloat(document.getElementById('quantidade').value) || 0;
-        const u = parseFloat(document.getElementById('valorUnit').value) || 0;
-        document.getElementById('valorTotal').value = (q * u).toFixed(2);
+    function exibirMoeda(v) {
+        return parseFloat(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
     }
 
-    function buscarClientePorCodigo() {
+    function calcularTotal() {
+        const q = formatarNumero(document.getElementById('quantidade').value);
+        const u = formatarNumero(document.getElementById('valorUnit').value);
+        const total = q * u;
+        document.getElementById('valorTotal').value = total.toFixed(2).replace('.', ',');
+    }
+
+    function buscarNomeAutomatico() {
         const cod = document.getElementById('codCliente').value;
-        if (mapaClientes[cod]) document.getElementById('cliente').value = mapaClientes[cod];
+        const encontrado = todosRegistros.find(r => r.cod === cod);
+        if(encontrado) document.getElementById('cliente').value = encontrado.cli;
     }
 
-    function adicionar() {
-        const cod = document.getElementById('codCliente').value.trim();
-        const cli = document.getElementById('cliente').value.trim();
-        const ser = document.getElementById('servico').value.trim();
-        const dat = document.getElementById('data').value;
-        const tot = parseFloat(document.getElementById('valorTotal').value) || 0;
-        const pag = parseFloat(document.getElementById('valorPago').value) || 0;
+    // FUNÇÃO PRINCIPAL DO BOTÃO
+    function salvarDados() {
+        const btn = document.getElementById('btnSalvar');
+        const registro = {
+            cod: document.getElementById('codCliente').value.trim(),
+            cli: document.getElementById('cliente').value.trim(),
+            ser: document.getElementById('servico').value.trim(),
+            dat: document.getElementById('data').value,
+            tot: formatarNumero(document.getElementById('valorTotal').value),
+            pag: formatarNumero(document.getElementById('valorPago').value),
+            dataCriacao: Date.now()
+        };
 
-        if(!cli || !ser || !cod) return alert("Preencha Código, Cliente e Serviço.");
+        if(!registro.cod || !registro.cli || !registro.ser) {
+            alert("Por favor, preencha Cód, Cliente e Serviço!");
+            return;
+        }
 
-        db.push({ cod, cli, ser, dat, tot, pag, timestamp: Date.now() }).then(() => {
-            limpar();
-        });
+        btn.disabled = true;
+        btn.innerText = "Salvando...";
+
+        refVendas.push(registro)
+            .then(() => {
+                alert("Salvo com sucesso!");
+                // Limpa campos específicos
+                document.getElementById('servico').value = "";
+                document.getElementById('valorUnit').value = "";
+                document.getElementById('valorTotal').value = "";
+                document.getElementById('valorPago').value = "0";
+            })
+            .catch((erro) => {
+                console.error(erro);
+                alert("Erro ao salvar: " + erro.message);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = "Salvar Registro no Servidor";
+            });
     }
 
-    function limpar() {
-        document.getElementById('codCliente').value = '';
-        document.getElementById('cliente').value = '';
-        document.getElementById('servico').value = '';
-        document.getElementById('valorUnit').value = '';
-        document.getElementById('valorTotal').value = '';
-        document.getElementById('valorPago').value = '0';
-    }
-
-    // LISTENER EM TEMPO REAL - ESSA PARTE FAZ APARECER NA LISTA
-    db.on('value', (snapshot) => {
-        dadosLocais = [];
-        mapaClientes = {}; 
-        snapshot.forEach((child) => {
-            const item = child.val();
-            // Correção de compatibilidade caso existam nomes de campos diferentes no banco
-            const registro = {
-                id: child.key,
-                cod: item.cod || item.codigo || "",
-                cli: item.cli || item.cliente || "",
-                ser: item.ser || item.servico || "",
-                dat: item.dat || item.data || "",
-                tot: parseFloat(item.tot || item.total || 0),
-                pag: parseFloat(item.pag || item.pago || item.valorPago || 0)
-            };
-            dadosLocais.push(registro);
-            if(registro.cod && registro.cli) mapaClientes[registro.cod] = registro.cli;
+    // Escuta mudanças no banco de dados
+    refVendas.on('value', snapshot => {
+        todosRegistros = [];
+        snapshot.forEach(item => {
+            todosRegistros.push({ id: item.key, ...item.val() });
         });
         atualizarTabela();
     });
 
-    function excluir(id) { if(confirm("Remover do servidor?")) db.child(id).remove(); }
-
     function atualizarTabela() {
-        const f = document.getElementById('filtro').value.toLowerCase();
-        const body = document.getElementById('tabelaBody');
-        body.innerHTML = '';
-        let sP = 0, sT = 0;
+        const filtro = document.getElementById('filtro').value.toLowerCase();
+        const corpoTabela = document.getElementById('tabelaBody');
+        corpoTabela.innerHTML = "";
 
-        // Filtra e ordena (mais recentes primeiro)
-        const filtrados = dadosLocais.filter(d => 
-            d.cli.toLowerCase().includes(f) || (d.cod && d.cod.toString().includes(f))
-        ).reverse();
+        todosRegistros
+            .filter(r => r.cli.toLowerCase().includes(filtro) || r.cod.includes(filtro))
+            .reverse()
+            .forEach(r => {
+                corpoTabela.innerHTML += `
+                    <tr>
+                        <td>#${r.cod}</td>
+                        <td>${r.dat.split('-').reverse().join('/')}</td>
+                        <td>${r.cli}</td>
+                        <td>${r.ser}</td>
+                        <td>R$ ${exibirMoeda(r.tot)}</td>
+                        <td>R$ ${exibirMoeda(r.pag)}</td>
+                        <td><button class="btn-delete" onclick="apagar('${r.id}')">🗑️</button></td>
+                    </tr>`;
+            });
+    }
 
-        filtrados.forEach(d => {
-            sP += d.pag; 
-            sT += d.tot;
-            body.innerHTML += `<tr>
-                <td>#${d.cod}</td>
-                <td>${d.dat.split('-').reverse().join('/')}</td>
-                <td>${d.cli}</td>
-                <td>${d.ser}</td>
-                <td>R$ ${formatarMoeda(d.tot)}</td>
-                <td>R$ ${formatarMoeda(d.pag)}</td>
-                <td><button class="btn-delete" onclick="excluir('${d.id}')">🗑️</button></td>
-            </tr>`;
-        });
-
-        document.getElementById('totalRecebido').innerText = `R$ ${formatarMoeda(sP)}`;
-        document.getElementById('totalAberto').innerText = `R$ ${formatarMoeda(sT - sP)}`;
+    function apagar(id) {
+        if(confirm("Deseja mesmo excluir este registro?")) {
+            refVendas.child(id).remove();
+        }
     }
 
     function gerarExtrato() {
-        const f = document.getElementById('filtro').value.toLowerCase();
-        const filtrados = dadosLocais.filter(d => d.cli.toLowerCase().includes(f) || (d.cod && d.cod.toString() === f));
-        if(!f || filtrados.length === 0) return alert("Busque um cliente primeiro.");
+        const filtro = document.getElementById('filtro').value;
+        if(!filtro) return alert("Digite o nome ou código para filtrar o extrato!");
 
-        let sT = 0, sP = 0, itens = '';
-        filtrados.sort((a,b) => new Date(a.dat) - new Date(b.dat)).forEach(i => {
-            sT += i.tot; sP += i.pag;
-            itens += `<div class="linha"><span>${i.ser} (${i.dat.split('-').reverse().join('/')})</span><span>R$ ${formatarMoeda(i.tot || i.pag)}</span></div>`;
+        const lista = todosRegistros.filter(r => r.cli.toLowerCase().includes(filtro.toLowerCase()) || r.cod === filtro);
+        if(lista.length === 0) return alert("Nenhum dado encontrado para este cliente.");
+
+        let somaT = 0, somaP = 0;
+        let linhas = "";
+        lista.forEach(r => {
+            somaT += r.tot; somaP += r.pag;
+            linhas += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px 0;">
+                <span>${r.ser} (${r.dat.split('-').reverse().join('/')})</span>
+                <span>R$ ${exibirMoeda(r.tot)}</span>
+            </div>`;
         });
 
         document.getElementById('areaImpressao').innerHTML = `
-            <div class="notinha">
-                <h2 style="text-align:center;">MARCOS MUNIZ</h2>
-                <h4 style="text-align:center; border-bottom:1px solid #000; padding-bottom:5px;">EXTRATO DE CONTA</h4>
-                <p><strong>CLIENTE:</strong> ${filtrados[0].cli.toUpperCase()} (#${filtrados[0].cod})</p>
-                <hr>${itens}<hr>
-                <div class="linha"><strong>TOTAL SERVIÇOS:</strong><span>R$ ${formatarMoeda(sT)}</span></div>
-                <div class="linha"><strong>TOTAL PAGO:</strong><span>R$ ${formatarMoeda(sP)}</span></div>
-                <div class="linha" style="font-size:1.3em;"><strong>SALDO DEVEDOR:</strong><span>R$ ${formatarMoeda(sT - sP)}</span></div>
+            <div style="padding:40px; font-family:monospace; color:#000; background:white; border:2px solid #000;">
+                <h2 style="text-align:center">MARCOS MUNIZ - EXTRATO</h2>
+                <p><strong>CLIENTE:</strong> ${lista[0].cli} (#${lista[0].cod})</p>
+                <hr>
+                ${linhas}
+                <hr>
+                <p>TOTAL SERVIÇOS: R$ ${exibirMoeda(somaT)}</p>
+                <p>VALOR JÁ PAGO: R$ ${exibirMoeda(somaP)}</p>
+                <h3 style="background:#eee; padding:5px;">SALDO DEVEDOR: R$ ${exibirMoeda(somaT - somaP)}</h3>
             </div>`;
         window.print();
-    }
-
-    function exportarBackup() {
-        let csv = "Codigo;Cliente;Servico;Data;Total;Pago\n";
-        dadosLocais.forEach(d => { csv += `${d.cod};${d.cli};${d.ser};${d.dat};${d.tot};${d.pag}\n`; });
-        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `backup_marcos_laser.csv`;
-        a.click();
-    }
-
-    function importarBackup(event) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const linhas = e.target.result.split('\n');
-            for (let i = 1; i < linhas.length; i++) {
-                const c = linhas[i].split(';');
-                if (c.length < 6) continue;
-                db.push({ cod: c[0], cli: c[1], ser: c[2], dat: c[3], tot: parseFloat(c[4]), pag: parseFloat(c[5]) });
-            }
-            alert("Importação concluída!");
-        };
-        reader.readAsText(event.target.files[0]);
     }
 </script>
 </body>
