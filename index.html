@@ -83,9 +83,13 @@
 <div id="areaImpressao" class="print-only"></div>
 
 <script>
-    let dados = JSON.parse(localStorage.getItem('servicos_v17')) || [];
+    let dados = JSON.parse(localStorage.getItem('servicos_v18')) || [];
     let codigosClientes = JSON.parse(localStorage.getItem('codigos_clientes')) || {};
     document.getElementById('data').valueAsDate = new Date();
+
+    function formatarMoeda(valor) {
+        return valor.toFixed(2).replace('.', ',');
+    }
 
     function calcular() {
         const q = parseFloat(document.getElementById('quantidade').value) || 0;
@@ -111,7 +115,7 @@
     }
 
     function salvar() {
-        localStorage.setItem('servicos_v17', JSON.stringify(dados));
+        localStorage.setItem('servicos_v18', JSON.stringify(dados));
         localStorage.setItem('codigos_clientes', JSON.stringify(codigosClientes));
         atualizarTabela();
     }
@@ -124,7 +128,7 @@
         document.getElementById('valorPago').value = '0';
     }
 
-    function excluir(id) { if(confirm("Excluir?")) { dados = dados.filter(d => d.id !== id); salvar(); } }
+    function excluir(id) { if(confirm("Excluir registro?")) { dados = dados.filter(d => d.id !== id); salvar(); } }
 
     function atualizarTabela() {
         const f = document.getElementById('filtro').value.toLowerCase();
@@ -133,9 +137,9 @@
         let sP = 0, sG = 0;
 
         dados.forEach(d => { sP += d.pag; sG += d.tot; });
-        document.getElementById('totalRecebido').innerText = `R$ ${sP.toFixed(2).replace('.',',')}`;
-        document.getElementById('totalAberto').innerText = `R$ ${(sG - sP).toFixed(2).replace('.',',')}`;
-        document.getElementById('totalGeral').innerText = `R$ ${sG.toFixed(2).replace('.',',')}`;
+        document.getElementById('totalRecebido').innerText = `R$ ${formatarMoeda(sP)}`;
+        document.getElementById('totalAberto').innerText = `R$ ${formatarMoeda(sG - sP)}`;
+        document.getElementById('totalGeral').innerText = `R$ ${formatarMoeda(sG)}`;
 
         dados.filter(d => d.cli.toLowerCase().includes(f) || d.cod.toString().includes(f)).forEach(d => {
             body.innerHTML += `<tr>
@@ -143,8 +147,8 @@
                 <td>${d.dat.split('-').reverse().join('/')}</td>
                 <td>${d.cli}</td>
                 <td>${d.ser}</td>
-                <td>R$ ${d.tot.toFixed(2).replace('.',',')}</td>
-                <td style="color:${d.saldo > 0 ? 'red':'green'}">R$ ${d.saldo.toFixed(2).replace('.',',')}</td>
+                <td>R$ ${formatarMoeda(d.tot)}</td>
+                <td style="color:${d.saldo > 0 ? 'red':'green'}">R$ ${formatarMoeda(d.saldo)}</td>
                 <td><button class="btn-delete" onclick="excluir(${d.id})">🗑️</button></td>
             </tr>`;
         });
@@ -153,12 +157,12 @@
     function gerarExtrato() {
         const f = document.getElementById('filtro').value.toLowerCase();
         const filtrados = dados.filter(d => d.cli.toLowerCase().includes(f) || d.cod.toString().includes(f));
-        if(!f || filtrados.length === 0) return alert("Filtre um cliente.");
+        if(!f || filtrados.length === 0) return alert("Filtre um cliente para gerar o extrato.");
 
         let sT = 0, sP = 0, itens = '';
         filtrados.forEach(i => {
             sT += i.tot; sP += i.pag;
-            itens += `<div class="linha"><span>${i.ser} (${i.dat.split('-').reverse().join('/')})</span><span>R$ ${i.tot.toFixed(2).replace('.',',')}</span></div>`;
+            itens += `<div class="linha"><span>${i.ser} (${i.dat.split('-').reverse().join('/')})</span><span>R$ ${formatarMoeda(i.tot)}</span></div>`;
         });
 
         document.getElementById('areaImpressao').innerHTML = `
@@ -168,10 +172,10 @@
                 <hr>
                 ${itens}
                 <div style="margin-top:10px; border-top: 1px solid #000; padding-top:10px;">
-                    <div class="linha"><strong>SUBTOTAL:</strong><span>R$ ${sT.toFixed(2).replace('.',',')}</span></div>
-                    <div class="linha"><strong>VALOR JÁ PAGO:</strong><span>R$ ${sP.toFixed(2).replace('.',',')}</span></div>
+                    <div class="linha"><strong>SUBTOTAL:</strong><span>R$ ${formatarMoeda(sT)}</span></div>
+                    <div class="linha"><strong>VALOR PAGO:</strong><span>R$ ${formatarMoeda(sP)}</span></div>
                     <div class="linha" style="font-size:1.2em; border-top: 1px dashed #000; margin-top:5px;">
-                        <strong>SALDO DEVEDOR:</strong><span>R$ ${(sT - sP).toFixed(2).replace('.',',')}</span>
+                        <strong>SALDO DEVEDOR:</strong><span>R$ ${formatarMoeda(sT - sP)}</span>
                     </div>
                 </div>
             </div>`;
@@ -180,7 +184,7 @@
 
     function exportarBackup() {
         let csv = "ID;Codigo;Cliente;Servico;Data;Total;Pago;Saldo\n";
-        dados.forEach(d => { csv += `${d.id};${d.cod};${d.cli};${d.ser};${d.dat};${d.tot.toFixed(2)};${d.pag.toFixed(2)};${d.saldo.toFixed(2)}\n`; });
+        dados.forEach(d => { csv += `${d.id};${d.cod};${d.cli};${d.ser};${d.dat};${d.tot};${d.pag};${d.saldo}\n`; });
         const blob = new Blob([csv], { type: 'text/csv' });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
@@ -202,7 +206,7 @@
                 });
                 codigosClientes[c[2].toUpperCase()] = parseInt(c[1]);
             }
-            if(confirm("Restaurar dados?")) { dados = novos; salvar(); }
+            if(confirm("Deseja restaurar os dados do backup?")) { dados = novos; salvar(); }
         };
         reader.readAsText(event.target.files[0]);
     }
