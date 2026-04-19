@@ -63,13 +63,13 @@
     <button class="btn" onclick="adicionar()">Salvar Registro</button>
 
     <div class="search-area">
-        <label>🔎 Filtrar Cliente para Extrato:</label>
-        <input type="text" id="filtro" placeholder="Digite o nome do cliente..." onkeyup="atualizarTabela()">
-        <button class="btn btn-print" onclick="gerarExtrato()">Gerar Extrato Completo</button>
+        <label>🔎 Filtrar Cliente / Código:</label>
+        <input type="text" id="filtro" placeholder="Digite nome ou código..." onkeyup="atualizarTabela()">
+        <button class="btn btn-print" onclick="gerarExtrato()">Gerar Extrato do Cliente</button>
     </div>
 
     <table>
-        <thead><tr><th>Data</th><th>Cliente</th><th>Serviço</th><th>Total</th><th>Pago</th><th>Saldo</th><th>Ação</th></tr></thead>
+        <thead><tr><th>Cód.</th><th>Data</th><th>Cliente</th><th>Serviço</th><th>Total</th><th>Saldo</th><th>Ação</th></tr></thead>
         <tbody id="tabelaBody"></tbody>
     </table>
 
@@ -83,7 +83,8 @@
 <div id="areaImpressao" class="print-only"></div>
 
 <script>
-    let dados = JSON.parse(localStorage.getItem('servicos_v16')) || [];
+    let dados = JSON.parse(localStorage.getItem('servicos_v17')) || [];
+    let codigosClientes = JSON.parse(localStorage.getItem('codigos_clientes')) || {};
     document.getElementById('data').valueAsDate = new Date();
 
     function calcular() {
@@ -97,18 +98,21 @@
         const ser = document.getElementById('servico').value;
         const dat = document.getElementById('data').value;
         const tot = parseFloat(document.getElementById('valorTotal').value) || 0;
-        const pagInput = document.getElementById('valorPago').value;
-        const pag = pagInput === "" ? 0 : parseFloat(pagInput);
+        const pag = parseFloat(document.getElementById('valorPago').value) || 0;
 
-        if(!cli || !ser || tot === 0) return alert("Preencha os campos obrigatórios.");
+        if(!cli || !ser || tot === 0) return alert("Preencha os campos.");
 
-        dados.push({ id: Date.now(), cli, ser, dat, tot, pag, saldo: tot - pag });
+        const nomeN = cli.trim().toUpperCase();
+        if(!codigosClientes[nomeN]) codigosClientes[nomeN] = Math.floor(1000 + Math.random() * 9000);
+        
+        dados.push({ id: Date.now(), cod: codigosClientes[nomeN], cli, ser, dat, tot, pag, saldo: tot - pag });
         salvar();
         limpar();
     }
 
     function salvar() {
-        localStorage.setItem('servicos_v16', JSON.stringify(dados));
+        localStorage.setItem('servicos_v17', JSON.stringify(dados));
+        localStorage.setItem('codigos_clientes', JSON.stringify(codigosClientes));
         atualizarTabela();
     }
 
@@ -120,12 +124,7 @@
         document.getElementById('valorPago').value = '0';
     }
 
-    function excluir(id) {
-        if(confirm("Deseja excluir este registro?")) {
-            dados = dados.filter(d => d.id !== id);
-            salvar();
-        }
-    }
+    function excluir(id) { if(confirm("Excluir?")) { dados = dados.filter(d => d.id !== id); salvar(); } }
 
     function atualizarTabela() {
         const f = document.getElementById('filtro').value.toLowerCase();
@@ -134,33 +133,32 @@
         let sP = 0, sG = 0;
 
         dados.forEach(d => { sP += d.pag; sG += d.tot; });
-        document.getElementById('totalRecebido').innerText = `R$ ${sP.toFixed(2)}`;
-        document.getElementById('totalAberto').innerText = `R$ ${(sG - sP).toFixed(2)}`;
-        document.getElementById('totalGeral').innerText = `R$ ${sG.toFixed(2)}`;
+        document.getElementById('totalRecebido').innerText = `R$ ${sP.toFixed(2).replace('.',',')}`;
+        document.getElementById('totalAberto').innerText = `R$ ${(sG - sP).toFixed(2).replace('.',',')}`;
+        document.getElementById('totalGeral').innerText = `R$ ${sG.toFixed(2).replace('.',',')}`;
 
-        dados.filter(d => d.cli.toLowerCase().includes(f)).forEach(d => {
+        dados.filter(d => d.cli.toLowerCase().includes(f) || d.cod.toString().includes(f)).forEach(d => {
             body.innerHTML += `<tr>
+                <td>#${d.cod}</td>
                 <td>${d.dat.split('-').reverse().join('/')}</td>
                 <td>${d.cli}</td>
                 <td>${d.ser}</td>
-                <td>R$ ${d.tot.toFixed(2)}</td>
-                <td>R$ ${d.pag.toFixed(2)}</td>
-                <td style="color:${d.saldo > 0 ? 'red':'green'}">R$ ${d.saldo.toFixed(2)}</td>
+                <td>R$ ${d.tot.toFixed(2).replace('.',',')}</td>
+                <td style="color:${d.saldo > 0 ? 'red':'green'}">R$ ${d.saldo.toFixed(2).replace('.',',')}</td>
                 <td><button class="btn-delete" onclick="excluir(${d.id})">🗑️</button></td>
             </tr>`;
         });
     }
 
     function gerarExtrato() {
-        const f = document.getElementById('filtro').value.trim().toLowerCase();
-        const filtrados = dados.filter(d => d.cli.toLowerCase().includes(f));
-        
-        if(!f || filtrados.length === 0) return alert("Filtre um cliente para gerar o extrato.");
+        const f = document.getElementById('filtro').value.toLowerCase();
+        const filtrados = dados.filter(d => d.cli.toLowerCase().includes(f) || d.cod.toString().includes(f));
+        if(!f || filtrados.length === 0) return alert("Filtre um cliente.");
 
         let sT = 0, sP = 0, itens = '';
         filtrados.forEach(i => {
             sT += i.tot; sP += i.pag;
-            itens += `<div class="linha"><span>${i.ser} (${i.dat.split('-').reverse().join('/')})</span><span>R$ ${i.tot.toFixed(2)}</span></div>`;
+            itens += `<div class="linha"><span>${i.ser} (${i.dat.split('-').reverse().join('/')})</span><span>R$ ${i.tot.toFixed(2).replace('.',',')}</span></div>`;
         });
 
         document.getElementById('areaImpressao').innerHTML = `
@@ -170,20 +168,19 @@
                 <hr>
                 ${itens}
                 <div style="margin-top:10px; border-top: 1px solid #000; padding-top:10px;">
-                    <div class="linha"><strong>SUBTOTAL:</strong><span>R$ ${sT.toFixed(2)}</span></div>
-                    <div class="linha"><strong>VALOR PAGO:</strong><span>R$ ${sP.toFixed(2)}</span></div>
+                    <div class="linha"><strong>SUBTOTAL:</strong><span>R$ ${sT.toFixed(2).replace('.',',')}</span></div>
+                    <div class="linha"><strong>VALOR JÁ PAGO:</strong><span>R$ ${sP.toFixed(2).replace('.',',')}</span></div>
                     <div class="linha" style="font-size:1.2em; border-top: 1px dashed #000; margin-top:5px;">
-                        <strong>SALDO DEVEDOR:</strong><span>R$ ${(sT - sP).toFixed(2)}</span>
+                        <strong>SALDO DEVEDOR:</strong><span>R$ ${(sT - sP).toFixed(2).replace('.',',')}</span>
                     </div>
                 </div>
-                <p style="text-align:center; font-size:0.7em; margin-top:20px;">Gestão Marcos Muniz - Gravações</p>
             </div>`;
         window.print();
     }
 
     function exportarBackup() {
-        let csv = "ID;Cliente;Servico;Data;Total;Pago;Saldo\n";
-        dados.forEach(d => { csv += `${d.id};${d.cli};${d.ser};${d.dat};${d.tot};${d.pag};${d.saldo}\n`; });
+        let csv = "ID;Codigo;Cliente;Servico;Data;Total;Pago;Saldo\n";
+        dados.forEach(d => { csv += `${d.id};${d.cod};${d.cli};${d.ser};${d.dat};${d.tot.toFixed(2)};${d.pag.toFixed(2)};${d.saldo.toFixed(2)}\n`; });
         const blob = new Blob([csv], { type: 'text/csv' });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
@@ -198,17 +195,14 @@
             const novos = [];
             for (let i = 1; i < linhas.length; i++) {
                 const c = linhas[i].split(';');
-                if (c.length < 7) continue;
+                if (c.length < 8) continue;
                 novos.push({ 
-                    id: parseInt(c[0]), cli: c[1], ser: c[2], dat: c[3], 
-                    tot: parseFloat(c[4]), pag: parseFloat(c[5]), saldo: parseFloat(c[6]) 
+                    id: parseInt(c[0]), cod: parseInt(c[1]), cli: c[2], ser: c[3], 
+                    dat: c[4], tot: parseFloat(c[5]), pag: parseFloat(c[6]), saldo: parseFloat(c[7]) 
                 });
+                codigosClientes[c[2].toUpperCase()] = parseInt(c[1]);
             }
-            if(confirm(`Restaurar ${novos.length} registros?`)) { 
-                dados = novos; 
-                salvar(); 
-                alert("Backup restaurado!");
-            }
+            if(confirm("Restaurar dados?")) { dados = novos; salvar(); }
         };
         reader.readAsText(event.target.files[0]);
     }
