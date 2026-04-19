@@ -3,181 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão Marcos Muniz - Final</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <title>Gestão Marcos Muniz - Local</title>
     <style>
         :root { --primary: #1e40af; --success: #059669; --danger: #ef4444; --bg: #f1f5f9; }
-        body { font-family: sans-serif; background: var(--bg); padding: 20px; }
-        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 8px; shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; background: #f8fafc; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-        label { display: block; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; }
-        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 15px; margin-top: 10px; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; font-size: 1rem; }
-        .btn-save { background: var(--primary); }
-        .btn-save:disabled { background: #94a3b8; cursor: not-allowed; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: left; }
-        th { background: #f1f5f9; }
-        .status-online { color: var(--success); font-weight: bold; text-align: right; margin-bottom: 10px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; color: #475569; }
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
+        .btn { padding: 12px; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-save { background: var(--primary); width: 100%; margin-top: 15px; font-size: 1rem; }
+        .btn-save:hover { background: #1e3a8a; }
+        .btn-aux { background: #475569; font-size: 0.8rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; }
+        th, td { border-bottom: 1px solid #e2e8f0; padding: 12px; text-align: left; }
+        th { background: #f1f5f9; color: #1e293b; }
+        .search-box { margin-top: 30px; padding: 15px; background: #eff6ff; border-radius: 8px; }
         @media print { .no-print { display: none; } #areaPrint { display: block; } }
     </style>
 </head>
 <body>
 
 <div class="container no-print">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2 style="color:var(--primary)">Gestão Marcos Muniz</h2>
-        <div class="status-online" id="db-status">● VERIFICANDO CONEXÃO...</div>
+    <div class="header">
+        <h2 style="color:var(--primary); margin:0;">Marcos Muniz - Gravações</h2>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-aux" onclick="exportarDados()">💾 Fazer Backup (PC)</button>
+            <button class="btn btn-aux" onclick="document.getElementById('inputFile').click()">📂 Restaurar Backup</button>
+            <input type="file" id="inputFile" style="display:none" onchange="importarDados(event)">
+        </div>
     </div>
 
     <div class="grid">
-        <div><label>Cód. Cliente</label><input type="text" id="cod" onkeyup="autoNome()"></div>
+        <div><label>Cód. Cliente</label><input type="text" id="cod" onkeyup="autoCompletar()"></div>
         <div style="grid-column: span 2;"><label>Nome do Cliente</label><input type="text" id="cli"></div>
         <div style="grid-column: span 2;"><label>Serviço (ou 'Pagamento')</label><input type="text" id="ser" placeholder="Ex: Caneta"></div>
         <div><label>Data</label><input type="date" id="dat"></div>
-        <div><label>Qtd</label><input type="number" id="qtd" value="1" oninput="calc()"></div>
-        <div><label>V. Unit (R$)</label><input type="text" id="vun" oninput="calc()"></div>
+        <div><label>Qtd</label><input type="number" id="qtd" value="1" oninput="calcular()"></div>
+        <div><label>V. Unit (R$)</label><input type="text" id="vun" oninput="calcular()"></div>
         <div><label>V. Total (R$)</label><input type="text" id="vto" readonly></div>
         <div><label>V. Pago (R$)</label><input type="text" id="vpa" value="0"></div>
     </div>
 
-    <button id="btnSalvar" class="btn btn-save" onclick="enviarDados()">Salvar Registro no Servidor</button>
+    <button class="btn btn-save" onclick="salvar()">Salvar Registro no Computador</button>
 
-    <div style="margin-top:30px; background:#eff6ff; padding:15px; border-radius:8px;">
-        <input type="text" id="busca" placeholder="Filtrar por nome ou código..." onkeyup="listar()">
-        <button class="btn" style="background:var(--success); margin-top:10px;" onclick="imprimir()">Gerar Extrato do Cliente</button>
+    <div class="search-box">
+        <label>Pesquisar Cliente para Extrato:</label>
+        <input type="text" id="busca" placeholder="Digite nome ou código..." onkeyup="renderizar()">
+        <button class="btn" style="background:var(--success); width:100%; margin-top:10px;" onclick="gerarExtrato()">Imprimir Extrato do Cliente</button>
     </div>
 
-    <table id="tabela">
-        <thead><tr><th>Cód.</th><th>Data</th><th>Cliente</th><th>Serviço</th><th>Total</th><th>Pago</th><th>Ação</th></tr></thead>
-        <tbody id="listacorpo"></tbody>
+    <table>
+        <thead>
+            <tr>
+                <th>Cód.</th>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Serviço</th>
+                <th>Total</th>
+                <th>Pago</th>
+                <th>Ação</th>
+            </tr>
+        </thead>
+        <tbody id="corpoTabela"></tbody>
     </table>
 </div>
 
-<div id="areaPrint" style="display:none"></div>
+<div id="areaPrint"></div>
 
 <script>
-    // Configuração do Firebase
-    const conf = {
-        apiKey: "AIzaSyA5gVffkit4xmKNoa_LqJoJ9Y8oIVXbyds",
-        authDomain: "gestao-marcos-muniz.firebaseapp.com",
-        projectId: "gestao-marcos-muniz",
-        databaseURL: "https://gestao-marcos-muniz-default-rtdb.firebaseio.com/"
-    };
-    firebase.initializeApp(conf);
-    const banco = firebase.database();
-    const rota = banco.ref('vendas_oficial');
-
-    let cache = [];
+    let registros = JSON.parse(localStorage.getItem('marcos_muniz_data')) || [];
     document.getElementById('dat').valueAsDate = new Date();
 
-    // Monitor de conexão
-    banco.ref(".info/connected").on("value", (snap) => {
-        document.getElementById('db-status').innerText = snap.val() ? "● ONLINE" : "● OFFLINE (ERRO)";
-        document.getElementById('db-status').style.color = snap.val() ? "#059669" : "#ef4444";
-    });
-
     function n(v) { return parseFloat(v.toString().replace(/\./g, '').replace(',', '.')) || 0; }
-    function m(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
+    function m(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
-    function calc() {
-        const t = n(document.getElementById('qtd').value) * n(document.getElementById('vun').value);
-        document.getElementById('vto').value = t.toFixed(2).replace('.', ',');
+    function calcular() {
+        const total = n(document.getElementById('qtd').value) * n(document.getElementById('vun').value);
+        document.getElementById('vto').value = total.toFixed(2).replace('.', ',');
     }
 
-    function autoNome() {
-        const c = document.getElementById('cod').value;
-        const f = cache.find(x => x.cod === c);
-        if(f) document.getElementById('cli').value = f.cli;
+    function autoCompletar() {
+        const codigo = document.getElementById('cod').value;
+        const achei = registros.find(r => r.cod === codigo);
+        if(achei) document.getElementById('cli').value = achei.cli;
     }
 
-    function enviarDados() {
-        const b = document.getElementById('btnSalvar');
-        const obj = {
-            cod: document.getElementById('cod').value.trim(),
-            cli: document.getElementById('cli').value.trim(),
-            ser: document.getElementById('ser').value.trim(),
+    function salvar() {
+        const item = {
+            id: Date.now(),
+            cod: document.getElementById('cod').value,
+            cli: document.getElementById('cli').value,
+            ser: document.getElementById('ser').value,
             dat: document.getElementById('dat').value,
             vto: n(document.getElementById('vto').value),
-            vpa: n(document.getElementById('vpa').value),
-            ts: Date.now()
+            vpa: n(document.getElementById('vpa').value)
         };
 
-        if(!obj.cod || !obj.cli || !obj.ser) return alert("Preencha Cód, Cliente e Serviço!");
+        if(!item.cli || !item.ser) return alert("Preencha o Nome e o Serviço!");
 
-        b.disabled = true;
-        b.innerText = "Salvando...";
-
-        // Timeout de segurança: se o firebase travar, ele libera o botão em 5s
-        const t = setTimeout(() => {
-            b.disabled = false;
-            b.innerText = "Erro: Servidor não respondeu";
-        }, 5000);
-
-        rota.push(obj).then(() => {
-            clearTimeout(t);
-            alert("Sucesso!");
-            b.disabled = false;
-            b.innerText = "Salvar Registro no Servidor";
-            document.getElementById('ser').value = "";
-            document.getElementById('vun').value = "";
-            document.getElementById('vto').value = "";
-            document.getElementById('vpa').value = "0";
-        }).catch(e => alert("Erro: " + e.message));
+        registros.push(item);
+        localStorage.setItem('marcos_muniz_data', JSON.stringify(registros));
+        
+        // Limpar campos
+        document.getElementById('ser').value = "";
+        document.getElementById('vun').value = "";
+        document.getElementById('vto').value = "";
+        document.getElementById('vpa').value = "0";
+        
+        renderizar();
+        alert("Salvo localmente com sucesso!");
     }
 
-    rota.on('value', snap => {
-        cache = [];
-        snap.forEach(c => { cache.push({ id: c.key, ...c.val() }); });
-        listar();
-    });
-
-    function listar() {
-        const f = document.getElementById('busca').value.toLowerCase();
-        const corpo = document.getElementById('listacorpo');
-        corpo.innerHTML = "";
-
-        cache.filter(x => x.cli.toLowerCase().includes(f) || x.cod.includes(f)).reverse().forEach(x => {
-            corpo.innerHTML += `<tr>
-                <td>#${x.cod}</td>
-                <td>${x.dat.split('-').reverse().join('/')}</td>
-                <td>${x.cli}</td>
-                <td>${x.ser}</td>
-                <td>R$ ${m(x.vto)}</td>
-                <td>R$ ${m(x.vpa)}</td>
-                <td><button onclick="banco.ref('vendas_oficial/${x.id}').remove()" style="background:var(--danger); color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;">🗑️</button></td>
-            </tr>`;
-        });
+    function renderizar() {
+        const filtro = document.getElementById('busca').value.toLowerCase();
+        const html = registros.filter(r => r.cli.toLowerCase().includes(filtro) || r.cod.includes(filtro))
+            .reverse()
+            .map(r => `
+                <tr>
+                    <td>#${r.cod}</td>
+                    <td>${r.dat.split('-').reverse().join('/')}</td>
+                    <td>${r.cli}</td>
+                    <td>${r.ser}</td>
+                    <td>R$ ${m(r.vto)}</td>
+                    <td>R$ ${m(r.vpa)}</td>
+                    <td><button onclick="excluir(${r.id})" style="background:none; border:none; cursor:pointer;">🗑️</button></td>
+                </tr>
+            `).join('');
+        document.getElementById('corpoTabela').innerHTML = html;
     }
 
-    function imprimir() {
-        const f = document.getElementById('busca').value;
-        if(!f) return alert("Filtre um cliente primeiro!");
-        const lista = cache.filter(x => x.cli.toLowerCase().includes(f.toLowerCase()) || x.cod === f);
+    function excluir(id) {
+        if(confirm("Excluir este registro?")) {
+            registros = registros.filter(r => r.id !== id);
+            localStorage.setItem('marcos_muniz_data', JSON.stringify(registros));
+            renderizar();
+        }
+    }
+
+    function gerarExtrato() {
+        const filtro = document.getElementById('busca').value;
+        if(!filtro) return alert("Pesquise um cliente primeiro!");
         
-        let txt = `<div style="font-family:monospace; padding:30px; border:2px solid #000;">
-            <h2 style="text-align:center">MARCOS MUNIZ - EXTRATO</h2>
-            <p>CLIENTE: ${lista[0].cli} (#${lista[0].cod})</p><hr>`;
-        
-        let tS = 0, tP = 0;
-        lista.forEach(x => {
-            tS += x.vto; tP += x.vpa;
-            txt += `<div style="display:flex; justify-content:space-between; margin:5px 0;">
-                <span>${x.ser} (${x.dat.split('-').reverse().join('/')})</span>
-                <span>R$ ${m(x.vto || x.vpa)}</span>
+        const lista = registros.filter(r => r.cli.toLowerCase().includes(filtro.toLowerCase()) || r.cod === filtro);
+        if(lista.length === 0) return alert("Nada encontrado.");
+
+        let somaT = 0, somaP = 0;
+        let linhas = lista.map(r => {
+            somaT += r.vto; somaP += r.vpa;
+            return `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #ccc; padding:5px 0;">
+                <span>${r.ser} (${r.dat.split('-').reverse().join('/')})</span>
+                <span>R$ ${m(r.vto || r.vpa)}</span>
             </div>`;
-        });
+        }).join('');
 
-        txt += `<hr><p>TOTAL SERVIÇOS: R$ ${m(tS)}</p>
-            <p>VALOR JÁ PAGO: R$ ${m(tP)}</p>
-            <h3 style="background:#eee; padding:10px;">SALDO DEVEDOR: R$ ${m(tS - tP)}</h3></div>`;
+        const conteudo = `
+            <div style="font-family:Courier, monospace; padding:20px; border:1px solid #000; width:100%; max-width:600px;">
+                <h2 style="text-align:center">MARCOS MUNIZ - EXTRATO</h2>
+                <p>CLIENTE: ${lista[0].cli} (#${lista[0].cod})</p><hr>
+                ${linhas}
+                <hr>
+                <p>TOTAL SERVIÇOS: R$ ${m(somaT)}</p>
+                <p>TOTAL PAGO: R$ ${m(somaP)}</p>
+                <h3 style="background:#eee; padding:10px;">SALDO DEVEDOR: R$ ${m(somaT - somaP)}</h3>
+            </div>`;
         
         const win = window.open('', '');
-        win.document.write(txt);
+        win.document.write(conteudo);
         win.print();
         win.close();
     }
+
+    // Funções de Backup (PC)
+    function exportarDados() {
+        const blob = new Blob([JSON.stringify(registros)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_marcos_muniz_${new Date().toLocaleDateString()}.json`;
+        a.click();
+    }
+
+    function importarDados(event) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            registros = JSON.parse(e.target.result);
+            localStorage.setItem('marcos_muniz_data', JSON.stringify(registros));
+            renderizar();
+            alert("Backup restaurado!");
+        };
+        reader.readAsText(event.target.files[0]);
+    }
+
+    renderizar();
 </script>
 </body>
 </html>
