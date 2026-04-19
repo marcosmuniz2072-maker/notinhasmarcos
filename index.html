@@ -3,212 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão Marcos Muniz - Online</title>
+    <title>Gestão Marcos Muniz - Final</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
     <style>
-        :root { --primary: #1e40af; --accent: #3b82f6; --bg: #f1f5f9; --text: #0f172a; --danger: #ef4444; --success: #059669; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 1150px; margin: 20px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .header-site { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
-        .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
-        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
-        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 1rem; }
-        .btn:hover { background: #1a368e; }
-        .btn-backup { background: #1e293b; font-size: 0.75rem; padding: 8px 12px; width: auto; margin: 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        :root { --primary: #1e40af; --success: #059669; --danger: #ef4444; --bg: #f1f5f9; }
+        body { font-family: sans-serif; background: var(--bg); padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 8px; shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; background: #f8fafc; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        label { display: block; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; }
+        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; margin-top: 10px; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-save { background: var(--primary); }
+        .btn-save:disabled { background: #94a3b8; cursor: not-allowed; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: left; }
         th { background: #f1f5f9; }
-        .btn-delete { background: var(--danger); color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; }
-        @media print { body * { visibility: hidden; } #areaImpressao, #areaImpressao * { visibility: visible; } #areaImpressao { position: absolute; left: 0; top: 0; width: 100%; } }
+        .status-online { color: var(--success); font-weight: bold; text-align: right; margin-bottom: 10px; }
+        @media print { .no-print { display: none; } #areaPrint { display: block; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header-site">
-        <h1 style="color:var(--primary); margin:0;">Gestão Marcos Muniz</h1>
-        <div style="display:flex; gap:10px;">
-            <button class="btn btn-backup" onclick="exportarCSV()">💾 Backup</button>
-            <button class="btn btn-backup" style="background:#64748b" onclick="document.getElementById('inputArquivo').click()">📂 Restaurar</button>
-            <input type="file" id="inputArquivo" style="display:none" onchange="importarCSV(event)">
-        </div>
-    </div>
-    
-    <div class="form-section">
-        <div><label>Cód. Cliente</label><input type="text" id="codCliente" onkeyup="buscarNomeAutomatico()"></div>
-        <div style="grid-column: span 2;"><label>Nome do Cliente</label><input type="text" id="cliente"></div>
-        <div style="grid-column: span 3;"><label>Serviço / Produto</label><input type="text" id="servico"></div>
-        <div><label>Data</label><input type="date" id="data"></div>
-        <div><label>Qtd</label><input type="number" id="quantidade" value="1" oninput="calcularTotal()"></div>
-        <div><label>V. Unit (R$)</label><input type="text" id="valorUnit" oninput="calcularTotal()"></div>
-        <div><label>V. Total (R$)</label><input type="text" id="valorTotal" readonly></div>
-        <div><label>V. Pago (R$)</label><input type="text" id="valorPago" value="0"></div>
-    </div>
-    
-    <button id="btnSalvar" class="btn" onclick="salvarDados()">Salvar Registro no Servidor</button>
-
-    <div style="margin-top:25px; padding:15px; background:#eff6ff; border-radius:8px;">
-        <input type="text" id="filtro" placeholder="Filtrar por nome ou código..." onkeyup="atualizarTabela()" style="margin-bottom:10px;">
-        <button class="btn" style="background:var(--success); margin:0;" onclick="gerarExtrato()">Gerar Extrato do Cliente Filtrado</button>
+<div class="container no-print">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="color:var(--primary)">Gestão Marcos Muniz</h2>
+        <div class="status-online" id="db-status">● VERIFICANDO CONEXÃO...</div>
     </div>
 
-    <table>
+    <div class="grid">
+        <div><label>Cód. Cliente</label><input type="text" id="cod" onkeyup="autoNome()"></div>
+        <div style="grid-column: span 2;"><label>Nome do Cliente</label><input type="text" id="cli"></div>
+        <div style="grid-column: span 2;"><label>Serviço (ou 'Pagamento')</label><input type="text" id="ser" placeholder="Ex: Caneta"></div>
+        <div><label>Data</label><input type="date" id="dat"></div>
+        <div><label>Qtd</label><input type="number" id="qtd" value="1" oninput="calc()"></div>
+        <div><label>V. Unit (R$)</label><input type="text" id="vun" oninput="calc()"></div>
+        <div><label>V. Total (R$)</label><input type="text" id="vto" readonly></div>
+        <div><label>V. Pago (R$)</label><input type="text" id="vpa" value="0"></div>
+    </div>
+
+    <button id="btnSalvar" class="btn btn-save" onclick="enviarDados()">Salvar Registro no Servidor</button>
+
+    <div style="margin-top:30px; background:#eff6ff; padding:15px; border-radius:8px;">
+        <input type="text" id="busca" placeholder="Filtrar por nome ou código..." onkeyup="listar()">
+        <button class="btn" style="background:var(--success); margin-top:10px;" onclick="imprimir()">Gerar Extrato do Cliente</button>
+    </div>
+
+    <table id="tabela">
         <thead><tr><th>Cód.</th><th>Data</th><th>Cliente</th><th>Serviço</th><th>Total</th><th>Pago</th><th>Ação</th></tr></thead>
-        <tbody id="tabelaBody"></tbody>
+        <tbody id="listacorpo"></tbody>
     </table>
 </div>
 
-<div id="areaImpressao"></div>
+<div id="areaPrint" style="display:none"></div>
 
 <script>
-    // Inicialização do Firebase
-    const firebaseConfig = {
+    // Configuração do Firebase
+    const conf = {
         apiKey: "AIzaSyA5gVffkit4xmKNoa_LqJoJ9Y8oIVXbyds",
         authDomain: "gestao-marcos-muniz.firebaseapp.com",
         projectId: "gestao-marcos-muniz",
         databaseURL: "https://gestao-marcos-muniz-default-rtdb.firebaseio.com/"
     };
-    
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    const refVendas = database.ref('vendas_v3'); // Nova versão para evitar conflito de dados
+    firebase.initializeApp(conf);
+    const banco = firebase.database();
+    const rota = banco.ref('vendas_oficial');
 
-    let todosRegistros = [];
-    document.getElementById('data').valueAsDate = new Date();
+    let cache = [];
+    document.getElementById('dat').valueAsDate = new Date();
 
-    // Converte vírgula para ponto para o sistema entender números
-    function formatarNumero(valor) {
-        if(!valor) return 0;
-        let n = valor.toString().replace(/\./g, '').replace(',', '.');
-        return parseFloat(n) || 0;
-    }
-
-    function exibirMoeda(v) {
-        return parseFloat(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    }
-
-    function calcularTotal() {
-        const q = formatarNumero(document.getElementById('quantidade').value);
-        const u = formatarNumero(document.getElementById('valorUnit').value);
-        const total = q * u;
-        document.getElementById('valorTotal').value = total.toFixed(2).replace('.', ',');
-    }
-
-    function buscarNomeAutomatico() {
-        const cod = document.getElementById('codCliente').value;
-        const encontrado = todosRegistros.find(r => r.cod === cod);
-        if(encontrado) document.getElementById('cliente').value = encontrado.cli;
-    }
-
-    // FUNÇÃO PRINCIPAL DO BOTÃO
-    function salvarDados() {
-        const btn = document.getElementById('btnSalvar');
-        const registro = {
-            cod: document.getElementById('codCliente').value.trim(),
-            cli: document.getElementById('cliente').value.trim(),
-            ser: document.getElementById('servico').value.trim(),
-            dat: document.getElementById('data').value,
-            tot: formatarNumero(document.getElementById('valorTotal').value),
-            pag: formatarNumero(document.getElementById('valorPago').value),
-            dataCriacao: Date.now()
-        };
-
-        if(!registro.cod || !registro.cli || !registro.ser) {
-            alert("Por favor, preencha Cód, Cliente e Serviço!");
-            return;
-        }
-
-        btn.disabled = true;
-        btn.innerText = "Salvando...";
-
-        refVendas.push(registro)
-            .then(() => {
-                alert("Salvo com sucesso!");
-                // Limpa campos específicos
-                document.getElementById('servico').value = "";
-                document.getElementById('valorUnit').value = "";
-                document.getElementById('valorTotal').value = "";
-                document.getElementById('valorPago').value = "0";
-            })
-            .catch((erro) => {
-                console.error(erro);
-                alert("Erro ao salvar: " + erro.message);
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerText = "Salvar Registro no Servidor";
-            });
-    }
-
-    // Escuta mudanças no banco de dados
-    refVendas.on('value', snapshot => {
-        todosRegistros = [];
-        snapshot.forEach(item => {
-            todosRegistros.push({ id: item.key, ...item.val() });
-        });
-        atualizarTabela();
+    // Monitor de conexão
+    banco.ref(".info/connected").on("value", (snap) => {
+        document.getElementById('db-status').innerText = snap.val() ? "● ONLINE" : "● OFFLINE (ERRO)";
+        document.getElementById('db-status').style.color = snap.val() ? "#059669" : "#ef4444";
     });
 
-    function atualizarTabela() {
-        const filtro = document.getElementById('filtro').value.toLowerCase();
-        const corpoTabela = document.getElementById('tabelaBody');
-        corpoTabela.innerHTML = "";
+    function n(v) { return parseFloat(v.toString().replace(/\./g, '').replace(',', '.')) || 0; }
+    function m(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
 
-        todosRegistros
-            .filter(r => r.cli.toLowerCase().includes(filtro) || r.cod.includes(filtro))
-            .reverse()
-            .forEach(r => {
-                corpoTabela.innerHTML += `
-                    <tr>
-                        <td>#${r.cod}</td>
-                        <td>${r.dat.split('-').reverse().join('/')}</td>
-                        <td>${r.cli}</td>
-                        <td>${r.ser}</td>
-                        <td>R$ ${exibirMoeda(r.tot)}</td>
-                        <td>R$ ${exibirMoeda(r.pag)}</td>
-                        <td><button class="btn-delete" onclick="apagar('${r.id}')">🗑️</button></td>
-                    </tr>`;
-            });
+    function calc() {
+        const t = n(document.getElementById('qtd').value) * n(document.getElementById('vun').value);
+        document.getElementById('vto').value = t.toFixed(2).replace('.', ',');
     }
 
-    function apagar(id) {
-        if(confirm("Deseja mesmo excluir este registro?")) {
-            refVendas.child(id).remove();
-        }
+    function autoNome() {
+        const c = document.getElementById('cod').value;
+        const f = cache.find(x => x.cod === c);
+        if(f) document.getElementById('cli').value = f.cli;
     }
 
-    function gerarExtrato() {
-        const filtro = document.getElementById('filtro').value;
-        if(!filtro) return alert("Digite o nome ou código para filtrar o extrato!");
+    function enviarDados() {
+        const b = document.getElementById('btnSalvar');
+        const obj = {
+            cod: document.getElementById('cod').value.trim(),
+            cli: document.getElementById('cli').value.trim(),
+            ser: document.getElementById('ser').value.trim(),
+            dat: document.getElementById('dat').value,
+            vto: n(document.getElementById('vto').value),
+            vpa: n(document.getElementById('vpa').value),
+            ts: Date.now()
+        };
 
-        const lista = todosRegistros.filter(r => r.cli.toLowerCase().includes(filtro.toLowerCase()) || r.cod === filtro);
-        if(lista.length === 0) return alert("Nenhum dado encontrado para este cliente.");
+        if(!obj.cod || !obj.cli || !obj.ser) return alert("Preencha Cód, Cliente e Serviço!");
 
-        let somaT = 0, somaP = 0;
-        let linhas = "";
-        lista.forEach(r => {
-            somaT += r.tot; somaP += r.pag;
-            linhas += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px 0;">
-                <span>${r.ser} (${r.dat.split('-').reverse().join('/')})</span>
-                <span>R$ ${exibirMoeda(r.tot)}</span>
+        b.disabled = true;
+        b.innerText = "Salvando...";
+
+        // Timeout de segurança: se o firebase travar, ele libera o botão em 5s
+        const t = setTimeout(() => {
+            b.disabled = false;
+            b.innerText = "Erro: Servidor não respondeu";
+        }, 5000);
+
+        rota.push(obj).then(() => {
+            clearTimeout(t);
+            alert("Sucesso!");
+            b.disabled = false;
+            b.innerText = "Salvar Registro no Servidor";
+            document.getElementById('ser').value = "";
+            document.getElementById('vun').value = "";
+            document.getElementById('vto').value = "";
+            document.getElementById('vpa').value = "0";
+        }).catch(e => alert("Erro: " + e.message));
+    }
+
+    rota.on('value', snap => {
+        cache = [];
+        snap.forEach(c => { cache.push({ id: c.key, ...c.val() }); });
+        listar();
+    });
+
+    function listar() {
+        const f = document.getElementById('busca').value.toLowerCase();
+        const corpo = document.getElementById('listacorpo');
+        corpo.innerHTML = "";
+
+        cache.filter(x => x.cli.toLowerCase().includes(f) || x.cod.includes(f)).reverse().forEach(x => {
+            corpo.innerHTML += `<tr>
+                <td>#${x.cod}</td>
+                <td>${x.dat.split('-').reverse().join('/')}</td>
+                <td>${x.cli}</td>
+                <td>${x.ser}</td>
+                <td>R$ ${m(x.vto)}</td>
+                <td>R$ ${m(x.vpa)}</td>
+                <td><button onclick="banco.ref('vendas_oficial/${x.id}').remove()" style="background:var(--danger); color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;">🗑️</button></td>
+            </tr>`;
+        });
+    }
+
+    function imprimir() {
+        const f = document.getElementById('busca').value;
+        if(!f) return alert("Filtre um cliente primeiro!");
+        const lista = cache.filter(x => x.cli.toLowerCase().includes(f.toLowerCase()) || x.cod === f);
+        
+        let txt = `<div style="font-family:monospace; padding:30px; border:2px solid #000;">
+            <h2 style="text-align:center">MARCOS MUNIZ - EXTRATO</h2>
+            <p>CLIENTE: ${lista[0].cli} (#${lista[0].cod})</p><hr>`;
+        
+        let tS = 0, tP = 0;
+        lista.forEach(x => {
+            tS += x.vto; tP += x.vpa;
+            txt += `<div style="display:flex; justify-content:space-between; margin:5px 0;">
+                <span>${x.ser} (${x.dat.split('-').reverse().join('/')})</span>
+                <span>R$ ${m(x.vto || x.vpa)}</span>
             </div>`;
         });
 
-        document.getElementById('areaImpressao').innerHTML = `
-            <div style="padding:40px; font-family:monospace; color:#000; background:white; border:2px solid #000;">
-                <h2 style="text-align:center">MARCOS MUNIZ - EXTRATO</h2>
-                <p><strong>CLIENTE:</strong> ${lista[0].cli} (#${lista[0].cod})</p>
-                <hr>
-                ${linhas}
-                <hr>
-                <p>TOTAL SERVIÇOS: R$ ${exibirMoeda(somaT)}</p>
-                <p>VALOR JÁ PAGO: R$ ${exibirMoeda(somaP)}</p>
-                <h3 style="background:#eee; padding:5px;">SALDO DEVEDOR: R$ ${exibirMoeda(somaT - somaP)}</h3>
-            </div>`;
-        window.print();
+        txt += `<hr><p>TOTAL SERVIÇOS: R$ ${m(tS)}</p>
+            <p>VALOR JÁ PAGO: R$ ${m(tP)}</p>
+            <h3 style="background:#eee; padding:10px;">SALDO DEVEDOR: R$ ${m(tS - tP)}</h3></div>`;
+        
+        const win = window.open('', '');
+        win.document.write(txt);
+        win.print();
+        win.close();
     }
 </script>
 </body>
