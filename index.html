@@ -8,18 +8,29 @@
         :root { --primary: #1e40af; --success: #059669; --danger: #ef4444; --bg: #f1f5f9; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); padding: 20px; }
         .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        
+        /* Cabeçalho com Logo */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 15px; }
+        .logo-container img { max-height: 60px; display: block; }
+        
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
         label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; color: #475569; }
         input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
+        
         .btn { padding: 12px; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-save { background: var(--primary); width: 100%; margin-top: 15px; font-size: 1rem; }
         .btn-save:hover { background: #1e3a8a; }
         .btn-aux { background: #475569; font-size: 0.8rem; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 25px; }
         th, td { border-bottom: 1px solid #e2e8f0; padding: 12px; text-align: left; }
         th { background: #f1f5f9; color: #1e293b; }
+        
         .search-box { margin-top: 30px; padding: 15px; background: #eff6ff; border-radius: 8px; }
+        
+        /* Rodapé do Extrato */
+        .footer-print { margin-top: 30px; text-align: center; font-size: 0.8rem; color: #666; border-top: 1px solid #eee; padding-top: 10px; }
+        
         @media print { .no-print { display: none; } #areaPrint { display: block; } }
     </style>
 </head>
@@ -27,7 +38,10 @@
 
 <div class="container no-print">
     <div class="header">
-        <h2 style="color:var(--primary); margin:0;">Marcos Muniz - Gravações</h2>
+        <div class="logo-container">
+            <h2 style="color:var(--primary); margin:0;">MARCOS MUNIZ</h2>
+            <small style="color:#64748b">Gravações a Laser</small>
+        </div>
         <div style="display:flex; gap:10px;">
             <button class="btn btn-aux" onclick="exportarDados()">💾 Fazer Backup (PC)</button>
             <button class="btn btn-aux" onclick="document.getElementById('inputFile').click()">📂 Restaurar Backup</button>
@@ -38,7 +52,7 @@
     <div class="grid">
         <div><label>Cód. Cliente</label><input type="text" id="cod" onkeyup="autoCompletar()"></div>
         <div style="grid-column: span 2;"><label>Nome do Cliente</label><input type="text" id="cli"></div>
-        <div style="grid-column: span 2;"><label>Serviço (ou 'Pagamento')</label><input type="text" id="ser" placeholder="Ex: Caneta"></div>
+        <div style="grid-column: span 2;"><label>Serviço (Escreva 'Pagamento' para abater)</label><input type="text" id="ser" placeholder="Ex: Caneta"></div>
         <div><label>Data</label><input type="date" id="dat"></div>
         <div><label>Qtd</label><input type="number" id="qtd" value="1" oninput="calcular()"></div>
         <div><label>V. Unit (R$)</label><input type="text" id="vun" oninput="calcular()"></div>
@@ -101,19 +115,19 @@
             vpa: n(document.getElementById('vpa').value)
         };
 
-        if(!item.cli || !item.ser) return alert("Preencha o Nome e o Serviço!");
+        if(!item.cli || !item.ser) return;
 
         registros.push(item);
         localStorage.setItem('marcos_muniz_data', JSON.stringify(registros));
         
-        // Limpar campos
+        // Limpar apenas campos de serviço e valores
         document.getElementById('ser').value = "";
         document.getElementById('vun').value = "";
         document.getElementById('vto').value = "";
         document.getElementById('vpa').value = "0";
         
         renderizar();
-        alert("Salvo localmente com sucesso!");
+        // Alerta de confirmação removido para salvar mais rápido
     }
 
     function renderizar() {
@@ -135,7 +149,7 @@
     }
 
     function excluir(id) {
-        if(confirm("Excluir este registro?")) {
+        if(confirm("Deseja realmente apagar este registro?")) {
             registros = registros.filter(r => r.id !== id);
             localStorage.setItem('marcos_muniz_data', JSON.stringify(registros));
             renderizar();
@@ -144,54 +158,72 @@
 
     function gerarExtrato() {
         const filtro = document.getElementById('busca').value;
-        if(!filtro) return alert("Pesquise um cliente primeiro!");
+        if(!filtro) return;
         
         const lista = registros.filter(r => r.cli.toLowerCase().includes(filtro.toLowerCase()) || r.cod === filtro);
-        if(lista.length === 0) return alert("Nada encontrado.");
+        if(lista.length === 0) return;
 
         let somaT = 0, somaP = 0;
         let linhas = lista.map(r => {
             somaT += r.vto; somaP += r.vpa;
-            return `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #ccc; padding:5px 0;">
+            return `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #ccc; padding:8px 0; font-size:12px;">
                 <span>${r.ser} (${r.dat.split('-').reverse().join('/')})</span>
                 <span>R$ ${m(r.vto || r.vpa)}</span>
             </div>`;
         }).join('');
 
+        const dataHora = new Date().toLocaleString();
+
         const conteudo = `
-            <div style="font-family:Courier, monospace; padding:20px; border:1px solid #000; width:100%; max-width:600px;">
-                <h2 style="text-align:center">MARCOS MUNIZ - EXTRATO</h2>
-                <p>CLIENTE: ${lista[0].cli} (#${lista[0].cod})</p><hr>
+            <div style="font-family:Arial, sans-serif; padding:40px; border:1px solid #000; width:100%; max-width:800px; margin:auto;">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <h1 style="margin:0; color:#1e40af;">MARCOS MUNIZ</h1>
+                    <p style="margin:5px 0;">EXTRATO DE SERVIÇOS E PAGAMENTOS</p>
+                </div>
+                
+                <p><strong>CLIENTE:</strong> ${lista[0].cli.toUpperCase()} (ID #${lista[0].cod})</p>
+                <hr style="border:1px solid #000">
                 ${linhas}
-                <hr>
-                <p>TOTAL SERVIÇOS: R$ ${m(somaT)}</p>
-                <p>TOTAL PAGO: R$ ${m(somaP)}</p>
-                <h3 style="background:#eee; padding:10px;">SALDO DEVEDOR: R$ ${m(somaT - somaP)}</h3>
+                <hr style="border:1px solid #000">
+                
+                <div style="text-align:right; font-size:14px;">
+                    <p>TOTAL EM SERVIÇOS: <strong>R$ ${m(somaT)}</strong></p>
+                    <p>TOTAL PAGO: <strong>R$ ${m(somaP)}</strong></p>
+                    <h2 style="background:#f1f5f9; padding:10px; display:inline-block;">SALDO DEVEDOR: R$ ${m(somaT - somaP)}</h2>
+                </div>
+
+                <div class="footer-print" style="margin-top:50px; text-align:center; border-top:1px solid #000; padding-top:10px;">
+                    <p>Sistema de Gestão Marcos Muniz - Gravações a Laser</p>
+                    <p>Gerado em: ${dataHora}</p>
+                </div>
             </div>`;
         
         const win = window.open('', '');
-        win.document.write(conteudo);
+        win.document.write(`<html><head><title>Extrato - Marcos Muniz</title></head><body>${conteudo}</body></html>`);
         win.print();
         win.close();
     }
 
-    // Funções de Backup (PC)
     function exportarDados() {
         const blob = new Blob([JSON.stringify(registros)], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `backup_marcos_muniz_${new Date().toLocaleDateString()}.json`;
+        a.download = `backup_marcos_muniz_${new Date().toLocaleDateString().replace(/\//g,'-')}.json`;
         a.click();
     }
 
     function importarDados(event) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            registros = JSON.parse(e.target.result);
-            localStorage.setItem('marcos_muniz_data', JSON.stringify(registros));
-            renderizar();
-            alert("Backup restaurado!");
+            try {
+                registros = JSON.parse(e.target.result);
+                localStorage.setItem('marcos_muniz_data', JSON.stringify(registros));
+                renderizar();
+                alert("Backup restaurado com sucesso!");
+            } catch(err) {
+                alert("Erro ao ler o arquivo de backup.");
+            }
         };
         reader.readAsText(event.target.files[0]);
     }
