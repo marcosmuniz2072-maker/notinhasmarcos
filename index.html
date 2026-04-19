@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Serviços Laser</title>
+    <style>
+        :root { --primary: #1e40af; --accent: #3b82f6; --bg: #f1f5f9; --text: #0f172a; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        h1 { color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 10px; font-size: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        
+        .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .full-width { grid-column: 1 / -1; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
+        input[readonly] { background-color: #e2e8f0; }
+        
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn-print { background: #059669; }
+        .btn-backup { background: #64748b; font-size: 0.8rem; width: auto; padding: 8px 15px; }
+        
+        .search-area { margin: 25px 0; padding: 15px; background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f1f5f9; }
+
+        .status-pago { color: #059669; font-weight: bold; }
+        .status-devendo { color: #ef4444; font-weight: bold; }
+
+        @media print {
+            .container, .btn, .btn-delete, .search-area, .form-section { display: none !important; }
+            .print-only { display: block !important; }
+            .notinha { border: 1px solid #000; padding: 20px; width: 100%; max-width: 450px; margin: auto; font-family: Courier, monospace; line-height: 1.2; }
+            .notinha h3 { text-align: center; margin-bottom: 10px; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 5px; }
+            .info-header { margin-bottom: 15px; font-size: 0.9em; }
+            .linha { display: flex; justify-content: space-between; margin: 4px 0; }
+            .totalizador { border-top: 2px solid #000; margin-top: 10px; padding-top: 10px; font-weight: bold; }
+        }
+        .print-only { display: none; }
+        .btn-delete { background: #ef4444; color: white; border: none; padding: 5px; border-radius: 3px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>
+        Gestão Laser e Engraving
+        <button class="btn btn-backup" onclick="exportarBackup()">💾 Backup CSV</button>
+    </h1>
+    
+    <div class="form-section">
+        <div class="full-width">
+            <label>Cliente</label>
+            <input type="text" id="cliente" placeholder="Nome do cliente">
+        </div>
+        <div class="full-width">
+            <label>Serviço</label>
+            <input type="text" id="servico" placeholder="Descrição do trabalho">
+        </div>
+        <div><label>Data Serviço</label><input type="date" id="data"></div>
+        <div><label>Qtd</label><input type="number" id="quantidade" value="1" oninput="calcularAutomatico()"></div>
+        <div><label>Valor Unit. (R$)</label><input type="number" id="valorUnitario" step="0.01" placeholder="0.00" oninput="calcularAutomatico()"></div>
+        <div><label>Valor Total (R$)</label><input type="number" id="valorTotal" step="0.01" readonly></div>
+        <div><label>Valor Pago (R$)</label><input type="number" id="valorPago" step="0.01" value="0"></div>
+    </div>
+    <button class="btn" onclick="adicionar()">Salvar Registro</button>
+
+    <div class="search-area">
+        <label>🔎 Filtrar por Cliente / Código:</label>
+        <input type="text" id="filtro" placeholder="Digite nome ou código..." onkeyup="atualizarTabela()">
+        <button class="btn btn-print" onclick="imprimirNotinha()">Gerar Extrato com Data Atual</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Cód.</th>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Serviço</th>
+                <th>Total</th>
+                <th>Saldo</th>
+                <th>Ação</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaBody"></tbody>
+    </table>
+</div>
+
+<div id="areaImpressao" class="print-only"></div>
+
+<script>
+    // Carrega dados e códigos de clientes
+    let dados = JSON.parse(localStorage.getItem('servicos_v7')) || [];
+    let codigosClientes = JSON.parse(localStorage.getItem('codigos_clientes')) || {};
+
+    document.getElementById('data').valueAsDate = new Date();
+
+    function getCodigoCliente(nome) {
+        const nomeNormalizado = nome.trim().toUpperCase();
+        if (!codigosClientes[nomeNormalizado]) {
+            // Gera um código aleatório simples ou sequencial
+            codigosClientes[nomeNormalizado] = Math.floor(1000 + Math.random() * 9000);
+            localStorage.setItem('codigos_clientes', JSON.stringify(codigosClientes));
+        }
+        return codigosClientes[nomeNormalizado];
+    }
+
+    function calcularAutomatico() {
+        const qtd = parseFloat(document.getElementById('quantidade').value) || 0;
+        const unit = parseFloat(document.getElementById('valorUnitario').value) || 0;
+        document.getElementById('valorTotal').value = (qtd * unit).toFixed(2);
+    }
+
+    function adicionar() {
+        const cli = document.getElementById('cliente').value;
+        const ser = document.getElementById('servico').value;
+        const dat = document.getElementById('data').value;
+        const qtd = parseFloat(document.getElementById('quantidade').value) || 0;
+        const unit = parseFloat(document.getElementById('valorUnitario').value) || 0;
+        const tot = qtd * unit;
+        const pag = parseFloat(document.getElementById('valorPago').value) || 0;
+
+        if(!cli || !ser || tot === 0) return alert("Preencha todos os campos.");
+
+        const cod = getCodigoCliente(cli);
+
+        dados.push({ id: Date.now(), cod, cli, ser, dat, qtd, unit, tot, pag, saldo: tot - pag });
+        localStorage.setItem('servicos_v7', JSON.stringify(dados));
+        limpar();
+        atualizarTabela();
+    }
+
+    function limpar() {
+        document.getElementById('cliente').value = '';
+        document.getElementById('servico').value = '';
+        document.getElementById('quantidade').value = '1';
+        document.getElementById('valorUnitario').value = '';
+        document.getElementById('valorTotal').value = '';
+        document.getElementById('valorPago').value = '0';
+        document.getElementById('data').valueAsDate = new Date();
+    }
+
+    function excluir(id) {
+        if(confirm("Deseja excluir este registro?")) {
+            dados = dados.filter(d => d.id !== id);
+            localStorage.setItem('servicos_v7', JSON.stringify(dados));
+            atualizarTabela();
+        }
+    }
+
+    function atualizarTabela() {
+        const filtro = document.getElementById('filtro').value.toLowerCase();
+        const body = document.getElementById('tabelaBody');
+        body.innerHTML = '';
+
+        dados.filter(d => d.cli.toLowerCase().includes(filtro) || d.cod.toString().includes(filtro)).forEach(d => {
+            body.innerHTML += `
+                <tr>
+                    <td>#${d.cod}</td>
+                    <td>${d.dat.split('-').reverse().join('/')}</td>
+                    <td>${d.cli}</td>
+                    <td>${d.ser}</td>
+                    <td>R$ ${d.tot.toFixed(2)}</td>
+                    <td class="${d.saldo <= 0 ? 'status-pago' : 'status-devendo'}">R$ ${d.saldo.toFixed(2)}</td>
+                    <td><button class="btn-delete" onclick="excluir(${d.id})">🗑️</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    function imprimirNotinha() {
+        const filtro = document.getElementById('filtro').value;
+        const filtrados = dados.filter(d => d.cli.toLowerCase().includes(filtro.toLowerCase()) || d.cod.toString() === filtro);
+        
+        if(!filtro || filtrados.length === 0) return alert("Filtre um cliente pelo nome ou código para gerar a nota.");
+
+        let somaTotal = 0, somaPago = 0;
+        let itens = '';
+        const agora = new Date();
+        const dataEmissao = agora.toLocaleDateString('pt-BR') + " às " + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+
+        filtrados.forEach(i => {
+            somaTotal += i.tot;
+            somaPago += i.pag;
+            itens += `<div class="linha"><span>${i.qtd}x ${i.ser}</span><span>R$ ${i.tot.toFixed(2)}</span></div>`;
+        });
+
+        const saldoFinal = somaTotal - somaPago;
+
+        document.getElementById('areaImpressao').innerHTML = `
+            <div class="notinha">
+                <h3>Extrato de Conta</h3>
+                <div class="info-header">
+                    <strong>CÓD. CLIENTE:</strong> #${filtrados[0].cod}<br>
+                    <strong>CLIENTE:</strong> ${filtrados[0].cli.toUpperCase()}<br>
+                    <strong>EMITIDO EM:</strong> ${dataEmissao}
+                </div>
+                <hr>
+                ${itens}
+                <div class="totalizador">
+                    <div class="linha"><span>SUBTOTAL:</span><span>R$ ${somaTotal.toFixed(2)}</span></div>
+                    <div class="linha"><span>VALOR JÁ PAGO:</span><span>R$ ${somaPago.toFixed(2)}</span></div>
+                    <div class="linha" style="font-size:1.2em; border-top: 1px dashed #000; margin-top:5px; padding-top:5px;">
+                        <span>SALDO DEVEDOR:</span><span>R$ ${saldoFinal.toFixed(2)}</span>
+                    </div>
+                </div>
+                <p style="text-align:center; margin-top:30px; font-size:0.7em;">Agradecemos a confiança!</p>
+            </div>
+        `;
+        window.print();
+    }
+
+    function exportarBackup() {
+        if(dados.length === 0) return alert("Sem dados.");
+        let csv = "Codigo;Data;Cliente;Servico;Qtd;Total;Pago;Saldo\n";
+        dados.forEach(d => { csv += `${d.cod};${d.dat};${d.cli};${d.ser};${d.qtd};${d.tot};${d.pag};${d.saldo}\n`; });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "backup_laser.csv";
+        a.click();
+    }
+
+    atualizarTabela();
+</script>
+</body>
+</html>
