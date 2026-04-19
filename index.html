@@ -10,7 +10,7 @@
     <style>
         :root { --primary: #1e40af; --accent: #3b82f6; --bg: #f1f5f9; --text: #0f172a; --danger: #ef4444; --success: #059669; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        .container { max-width: 1100px; margin: 20px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; }
+        .container { max-width: 1150px; margin: 20px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; }
         
         .header-site { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
         .logo-container { display: flex; align-items: center; gap: 15px; }
@@ -19,10 +19,11 @@
         
         .header-actions { display: flex; align-items: center; gap: 10px; }
         
-        .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .full-width { grid-column: 1 / -1; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
         input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
+        input:focus { border-color: var(--accent); outline: none; background: #fff; }
         
         .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
         .btn-print { background: var(--success); }
@@ -64,23 +65,24 @@
     </div>
     
     <div class="form-section">
-        <div class="full-width"><label>Cliente</label><input type="text" id="cliente" placeholder="Nome do cliente"></div>
-        <div class="full-width"><label>Serviço (Escreva 'Pagamento' para abater)</label><input type="text" id="servico" placeholder="Ex: Gravação Laser ou Pagamento"></div>
+        <div><label>Cód. Cliente</label><input type="number" id="codCliente" placeholder="0000" onkeyup="buscarClientePorCodigo()"></div>
+        <div style="grid-column: span 2;"><label>Nome do Cliente</label><input type="text" id="cliente" placeholder="Nome completo"></div>
+        <div style="grid-column: span 3;"><label>Serviço (ou 'Pagamento')</label><input type="text" id="servico" placeholder="Ex: Gravação Laser"></div>
         <div><label>Data</label><input type="date" id="data"></div>
         <div><label>Qtd</label><input type="number" id="quantidade" value="1" oninput="calcular()"></div>
         <div><label>V. Unit (R$)</label><input type="number" id="valorUnit" step="0.01" oninput="calcular()"></div>
         <div><label>V. Total (R$)</label><input type="number" id="valorTotal" readonly></div>
         <div><label>V. Pago (R$)</label><input type="number" id="valorPago" step="0.01" value="0"></div>
     </div>
-    <button class="btn" onclick="adicionar()">Salvar no Servidor</button>
+    <button class="btn" onclick="adicionar()">Salvar Registro no Servidor</button>
 
     <div class="search-area">
-        <input type="text" id="filtro" placeholder="Filtrar cliente..." onkeyup="atualizarTabela()">
+        <input type="text" id="filtro" placeholder="Filtrar por nome ou código..." onkeyup="atualizarTabela()">
         <button class="btn btn-print" onclick="gerarExtrato()">Gerar Extrato Completo</button>
     </div>
 
     <table>
-        <thead><tr><th>Data</th><th>Cliente</th><th>Serviço</th><th>V. Total</th><th>V. Pago</th><th>Ação</th></tr></thead>
+        <thead><tr><th>Cód.</th><th>Data</th><th>Cliente</th><th>Serviço</th><th>V. Total</th><th>V. Pago</th><th>Ação</th></tr></thead>
         <tbody id="tabelaBody"></tbody>
     </table>
 
@@ -106,6 +108,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('servicos_cloud');
     let dadosLocais = [];
+    let mapaClientes = {}; // Guarda a relação Código -> Nome
 
     document.getElementById('data').valueAsDate = new Date();
 
@@ -119,20 +122,30 @@
         document.getElementById('valorTotal').value = (q * u).toFixed(2);
     }
 
+    // Função que busca o nome assim que você digita o código
+    function buscarClientePorCodigo() {
+        const cod = document.getElementById('codCliente').value;
+        if (mapaClientes[cod]) {
+            document.getElementById('cliente').value = mapaClientes[cod];
+        }
+    }
+
     function adicionar() {
+        const cod = document.getElementById('codCliente').value.trim();
         const cli = document.getElementById('cliente').value.trim();
         const ser = document.getElementById('servico').value.trim();
         const dat = document.getElementById('data').value;
         const tot = parseFloat(document.getElementById('valorTotal').value) || 0;
         const pag = parseFloat(document.getElementById('valorPago').value) || 0;
 
-        if(!cli || !ser) return alert("Preencha os campos.");
+        if(!cli || !ser || !cod) return alert("Preencha Código, Cliente e Serviço.");
 
-        db.push({ cli, ser, dat, tot, pag, timestamp: Date.now() });
+        db.push({ cod, cli, ser, dat, tot, pag, timestamp: Date.now() });
         limpar();
     }
 
     function limpar() {
+        document.getElementById('codCliente').value = '';
         document.getElementById('cliente').value = '';
         document.getElementById('servico').value = '';
         document.getElementById('valorUnit').value = '';
@@ -142,13 +155,17 @@
 
     db.on('value', (snapshot) => {
         dadosLocais = [];
+        mapaClientes = {}; 
         snapshot.forEach((child) => {
-            dadosLocais.push({ id: child.key, ...child.val() });
+            const item = child.val();
+            dadosLocais.push({ id: child.key, ...item });
+            // Alimenta o mapa de códigos para preenchimento automático
+            if(item.cod && item.cli) mapaClientes[item.cod] = item.cli;
         });
         atualizarTabela();
     });
 
-    function excluir(id) { if(confirm("Remover permanentemente do servidor?")) db.child(id).remove(); }
+    function excluir(id) { if(confirm("Remover permanentemente?")) db.child(id).remove(); }
 
     function atualizarTabela() {
         const f = document.getElementById('filtro').value.toLowerCase();
@@ -156,17 +173,21 @@
         body.innerHTML = '';
         let sP = 0, sT = 0;
 
-        dadosLocais.forEach(d => { sP += d.pag; sT += d.tot; });
+        dadosLocais.forEach(d => { sP += (d.pag || 0); sT += (d.tot || 0); });
         document.getElementById('totalRecebido').innerText = `R$ ${formatarMoeda(sP)}`;
         document.getElementById('totalAberto').innerText = `R$ ${formatarMoeda(sT - sP)}`;
 
-        dadosLocais.filter(d => d.cli.toLowerCase().includes(f)).reverse().forEach(d => {
+        dadosLocais.filter(d => 
+            d.cli.toLowerCase().includes(f) || 
+            (d.cod && d.cod.toString().includes(f))
+        ).reverse().forEach(d => {
             body.innerHTML += `<tr>
+                <td>#${d.cod || '---'}</td>
                 <td>${d.dat.split('-').reverse().join('/')}</td>
                 <td>${d.cli}</td>
                 <td>${d.ser}</td>
-                <td>R$ ${formatarMoeda(d.tot)}</td>
-                <td>R$ ${formatarMoeda(d.pag)}</td>
+                <td>R$ ${formatarMoeda(d.tot || 0)}</td>
+                <td>R$ ${formatarMoeda(d.pag || 0)}</td>
                 <td><button class="btn-delete" onclick="excluir('${d.id}')">🗑️</button></td>
             </tr>`;
         });
@@ -174,14 +195,14 @@
 
     function gerarExtrato() {
         const f = document.getElementById('filtro').value.toLowerCase();
-        const filtrados = dadosLocais.filter(d => d.cli.toLowerCase().includes(f));
-        if(!f || filtrados.length === 0) return alert("Filtre um cliente primeiro.");
+        const filtrados = dadosLocais.filter(d => d.cli.toLowerCase().includes(f) || (d.cod && d.cod.toString() === f));
+        if(!f || filtrados.length === 0) return alert("Busque um cliente pelo nome ou código exato.");
 
         let sT = 0, sP = 0, itens = '';
         filtrados.sort((a,b) => new Date(a.dat) - new Date(b.dat)).forEach(i => {
-            sT += i.tot; sP += i.pag;
+            sT += (i.tot || 0); sP += (i.pag || 0);
             const desc = i.ser.toUpperCase() === 'PAGAMENTO' ? 'PAGAMENTO RECEBIDO' : i.ser;
-            const valor = i.tot > 0 ? i.tot : i.pag;
+            const valor = (i.tot > 0) ? i.tot : i.pag;
             itens += `<div class="linha"><span>${desc} (${i.dat.split('-').reverse().join('/')})</span><span>R$ ${formatarMoeda(valor)}</span></div>`;
         });
 
@@ -189,7 +210,7 @@
             <div class="notinha">
                 <h2 style="text-align:center;">MARCOS MUNIZ</h2>
                 <h4 style="text-align:center; border-bottom:1px solid #000; padding-bottom:5px;">EXTRATO DE CONTA</h4>
-                <p><strong>CLIENTE:</strong> ${filtrados[0].cli.toUpperCase()}</p>
+                <p><strong>CLIENTE:</strong> ${filtrados[0].cli.toUpperCase()} (#${filtrados[0].cod})</p>
                 <hr>${itens}<hr>
                 <div class="linha"><strong>TOTAL SERVIÇOS:</strong><span>R$ ${formatarMoeda(sT)}</span></div>
                 <div class="linha"><strong>TOTAL PAGO:</strong><span>R$ ${formatarMoeda(sP)}</span></div>
@@ -199,12 +220,12 @@
     }
 
     function exportarBackup() {
-        let csv = "Cliente;Servico;Data;Total;Pago\n";
-        dadosLocais.forEach(d => { csv += `${d.cli};${d.ser};${d.dat};${d.tot};${d.pag}\n`; });
+        let csv = "Codigo;Cliente;Servico;Data;Total;Pago\n";
+        dadosLocais.forEach(d => { csv += `${d.cod};${d.cli};${d.ser};${d.dat};${d.tot};${d.pag}\n`; });
         const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = `backup_marcos_laser_${new Date().toLocaleDateString()}.csv`;
+        a.download = `backup_marcos_laser.csv`;
         a.click();
     }
 
@@ -212,13 +233,13 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             const linhas = e.target.result.split('\n');
-            if(confirm("Isso enviará os dados do arquivo para o servidor online. Continuar?")) {
+            if(confirm("Importar dados para o servidor?")) {
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(';');
-                    if (c.length < 5) continue;
-                    db.push({ cli: c[0], ser: c[1], dat: c[2], tot: parseFloat(c[3]), pag: parseFloat(c[4]) });
+                    if (c.length < 6) continue;
+                    db.push({ cod: c[0], cli: c[1], ser: c[2], dat: c[3], tot: parseFloat(c[4]), pag: parseFloat(c[5]) });
                 }
-                alert("Dados restaurados com sucesso!");
+                alert("Importação concluída!");
             }
         };
         reader.readAsText(event.target.files[0]);
