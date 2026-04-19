@@ -6,35 +6,23 @@
     <title>Gestão Marcos Muniz - Gravações</title>
     <style>
         :root { --primary: #1e40af; --accent: #3b82f6; --bg: #f1f5f9; --text: #0f172a; --danger: #ef4444; --success: #059669; }
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            background-color: var(--bg); 
-            color: var(--text); 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            min-height: 100vh;
-            margin: 0;
-        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
         .container { max-width: 1100px; margin: 20px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; }
         
-        /* Cabeçalho com sua Logo logomarcos.png */
         .header-site { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
         .logo-container img { max-height: 80px; display: block; }
         .header-titles h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
 
-        /* Rodapé */
-        .footer-site { text-align: center; padding: 20px; font-size: 0.85rem; color: #64748b; background: white; border-top: 1px solid #e2e8f0; margin-top: 20px; }
-
-        .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .backup-controls { display: flex; gap: 10px; }
+        .btn-backup { background: #64748b; color: white; border: none; font-size: 0.75rem; padding: 6px 12px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        
+        .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8e0; }
         .full-width { grid-column: 1 / -1; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
         input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
-        input[readonly] { background-color: #e2e8f0; }
         
         .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
         .btn-print { background: var(--success); }
-        .btn-backup { background: #64748b; font-size: 0.75rem; width: auto; padding: 6px 12px; }
         
         .search-area { margin: 25px 0; padding: 15px; background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
@@ -44,14 +32,9 @@
         .finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; padding: 20px; background: #1e293b; color: white; border-radius: 8px; }
         .summary-card p { margin: 5px 0 0; font-size: 1.4rem; font-weight: bold; }
 
-        @media print {
-            .container, .btn, .btn-delete, .search-area, .form-section, .finance-summary, .footer-site { display: none !important; }
-            .print-only { display: block !important; }
-            .notinha { border: 1px solid #000; padding: 20px; width: 100%; max-width: 450px; margin: auto; font-family: Courier, monospace; }
-            .notinha-logo { text-align: center; margin-bottom: 15px; }
-            .notinha-logo img { max-height: 70px; }
-            .linha { display: flex; justify-content: space-between; margin: 4px 0; }
-        }
+        .footer-site { text-align: center; padding: 20px; font-size: 0.85rem; color: #64748b; background: white; border-top: 1px solid #e2e8f0; margin-top: 20px; }
+        
+        @media print { .container, .btn, .btn-delete, .search-area, .form-section, .finance-summary, .footer-site, .backup-controls { display: none !important; } .print-only { display: block !important; } .notinha { border: 1px solid #000; padding: 20px; width: 100%; max-width: 450px; margin: auto; font-family: Courier, monospace; } .linha { display: flex; justify-content: space-between; margin: 4px 0; } }
         .print-only { display: none; }
         .btn-delete { background: var(--danger); color: white; border: none; padding: 5px; border-radius: 3px; cursor: pointer; }
     </style>
@@ -60,28 +43,22 @@
 
 <div class="container">
     <div class="header-site">
-        <div class="logo-container">
-            <img src="logomarcos.png" alt="Logo Marco Muniz" onerror="this.style.display='none'">
+        <div class="logo-container"><img src="logomarcos.png" alt="Logo" onerror="this.style.display='none'"></div>
+        <div class="header-titles"><h1>Gestão Marcos Muniz - Gravações</h1></div>
+        <div class="backup-controls">
+            <button class="btn-backup" onclick="exportarBackup()">💾 Salvar Backup</button>
+            <button class="btn-backup" onclick="document.getElementById('inputArquivo').click()">📂 Restaurar Backup</button>
+            <input type="file" id="inputArquivo" accept=".csv" style="display:none" onchange="importarBackup(event)">
         </div>
-        <div class="header-titles">
-            <h1>Gestão Marcos Muniz - Gravações</h1>
-        </div>
-        <button class="btn btn-backup" onclick="exportarBackup()">💾 Backup CSV</button>
     </div>
     
     <div class="form-section">
-        <div class="full-width">
-            <label>Cliente</label>
-            <input type="text" id="cliente" placeholder="Nome do cliente">
-        </div>
-        <div class="full-width">
-            <label>Serviço</label>
-            <input type="text" id="servico" placeholder="Descrição do trabalho">
-        </div>
+        <div class="full-width"><label>Cliente</label><input type="text" id="cliente" placeholder="Nome do cliente"></div>
+        <div class="full-width"><label>Serviço</label><input type="text" id="servico" placeholder="Descrição do trabalho"></div>
         <div><label>Data Serviço</label><input type="date" id="data"></div>
         <div><label>Qtd</label><input type="number" id="quantidade" value="1" oninput="calcularAutomatico()"></div>
-        <div><label>Valor Unit. (R$)</label><input type="number" id="valorUnitario" step="0.01" placeholder="0.00" oninput="calcularAutomatico()"></div>
-        <div><label>Valor Total (R$)</label><input type="number" id="valorTotal" step="0.01" readonly></div>
+        <div><label>Valor Unit. (R$)</label><input type="number" id="valorUnitario" step="0.01" oninput="calcularAutomatico()"></div>
+        <div><label>Valor Total (R$)</label><input type="number" id="valorTotal" readonly></div>
         <div><label>Valor Pago (R$)</label><input type="number" id="valorPago" step="0.01" value="0"></div>
     </div>
     <button class="btn" onclick="adicionar()">Salvar Registro</button>
@@ -93,57 +70,25 @@
     </div>
 
     <table>
-        <thead>
-            <tr>
-                <th>Cód.</th>
-                <th>Data</th>
-                <th>Cliente</th>
-                <th>Serviço</th>
-                <th>Total</th>
-                <th>Saldo</th>
-                <th>Ação</th>
-            </tr>
-        </thead>
+        <thead><tr><th>Cód.</th><th>Data</th><th>Cliente</th><th>Serviço</th><th>Total</th><th>Saldo</th><th>Ação</th></tr></thead>
         <tbody id="tabelaBody"></tbody>
     </table>
 
     <div class="finance-summary">
-        <div class="summary-card">
-            <h4>Total Recebido</h4>
-            <p style="color: #86efac" id="totalRecebido">R$ 0,00</p>
-        </div>
-        <div class="summary-card">
-            <h4>Total em Aberto</h4>
-            <p style="color: #fca5a5" id="totalAberto">R$ 0,00</p>
-        </div>
-        <div class="summary-card">
-            <h4>Faturamento Bruto</h4>
-            <p id="totalGeral">R$ 0,00</p>
-        </div>
+        <div class="summary-card"><h4>Total Recebido</h4><p style="color: #86efac" id="totalRecebido">R$ 0,00</p></div>
+        <div class="summary-card"><h4>Total em Aberto</h4><p style="color: #fca5a5" id="totalAberto">R$ 0,00</p></div>
+        <div class="summary-card"><h4>Faturamento Bruto</h4><p id="totalGeral">R$ 0,00</p></div>
     </div>
 </div>
 
-<footer class="footer-site">
-    Criado por <strong>Marco Muniz</strong> - <span id="dataAtual"></span> - Todos os Direitos Reservados.
-</footer>
-
+<footer class="footer-site">Criado por <strong>Marco Muniz</strong> - <span id="dataAtual"></span></footer>
 <div id="areaImpressao" class="print-only"></div>
 
 <script>
-    let dados = JSON.parse(localStorage.getItem('servicos_v11')) || [];
+    let dados = JSON.parse(localStorage.getItem('servicos_v13')) || [];
     let codigosClientes = JSON.parse(localStorage.getItem('codigos_clientes')) || {};
-
     document.getElementById('data').valueAsDate = new Date();
     document.getElementById('dataAtual').innerText = new Date().toLocaleDateString();
-
-    function getCodigoCliente(nome) {
-        const nomeNormalizado = nome.trim().toUpperCase();
-        if (!codigosClientes[nomeNormalizado]) {
-            codigosClientes[nomeNormalizado] = Math.floor(1000 + Math.random() * 9000);
-            localStorage.setItem('codigos_clientes', JSON.stringify(codigosClientes));
-        }
-        return codigosClientes[nomeNormalizado];
-    }
 
     function calcularAutomatico() {
         const qtd = parseFloat(document.getElementById('quantidade').value) || 0;
@@ -155,115 +100,85 @@
         const cli = document.getElementById('cliente').value;
         const ser = document.getElementById('servico').value;
         const dat = document.getElementById('data').value;
-        const qtd = parseFloat(document.getElementById('quantidade').value) || 0;
-        const unit = parseFloat(document.getElementById('valorUnitario').value) || 0;
-        const tot = qtd * unit;
+        const tot = parseFloat(document.getElementById('valorTotal').value) || 0;
         const pag = parseFloat(document.getElementById('valorPago').value) || 0;
+        if(!cli || !ser || tot === 0) return alert("Preencha os valores.");
 
-        if(!cli || !ser || tot === 0) return alert("Preencha todos os campos.");
-
-        dados.push({ id: Date.now(), cod: getCodigoCliente(cli), cli, ser, dat, qtd, unit, tot, pag, saldo: tot - pag });
-        localStorage.setItem('servicos_v11', JSON.stringify(dados));
-        limpar();
-        atualizarTabela();
+        const nomeNormal = cli.trim().toUpperCase();
+        if(!codigosClientes[nomeNormal]) codigosClientes[nomeNormal] = Math.floor(1000 + Math.random() * 9000);
+        
+        dados.push({ id: Date.now(), cod: codigosClientes[nomeNormal], cli, ser, dat, tot, pag, saldo: tot - pag });
+        salvarEAtualizar();
+        limparCampos();
     }
 
-    function limpar() {
+    function limparCampos() {
         document.getElementById('cliente').value = '';
         document.getElementById('servico').value = '';
-        document.getElementById('quantidade').value = '1';
         document.getElementById('valorUnitario').value = '';
         document.getElementById('valorTotal').value = '';
         document.getElementById('valorPago').value = '0';
-        document.getElementById('data').valueAsDate = new Date();
     }
 
-    function excluir(id) {
-        if(confirm("Deseja excluir este registro?")) {
-            dados = dados.filter(d => d.id !== id);
-            localStorage.setItem('servicos_v11', JSON.stringify(dados));
-            atualizarTabela();
-        }
+    function salvarEAtualizar() {
+        localStorage.setItem('servicos_v13', JSON.stringify(dados));
+        localStorage.setItem('codigos_clientes', JSON.stringify(codigosClientes));
+        atualizarTabela();
     }
 
     function atualizarTabela() {
         const filtro = document.getElementById('filtro').value.toLowerCase();
         const body = document.getElementById('tabelaBody');
         body.innerHTML = '';
+        let sP = 0, sG = 0;
 
-        let somaPago = 0, somaAberto = 0, somaTotal = 0;
-
-        dados.forEach(d => {
-            somaPago += d.pag;
-            somaAberto += d.saldo;
-            somaTotal += d.tot;
-        });
-
-        document.getElementById('totalRecebido').innerText = `R$ ${somaPago.toFixed(2)}`;
-        document.getElementById('totalAberto').innerText = `R$ ${somaAberto.toFixed(2)}`;
-        document.getElementById('totalGeral').innerText = `R$ ${somaTotal.toFixed(2)}`;
+        dados.forEach(d => { sP += d.pag; sG += d.tot; });
+        document.getElementById('totalRecebido').innerText = `R$ ${sP.toFixed(2)}`;
+        document.getElementById('totalAberto').innerText = `R$ ${(sG - sP).toFixed(2)}`;
+        document.getElementById('totalGeral').innerText = `R$ ${sG.toFixed(2)}`;
 
         dados.filter(d => d.cli.toLowerCase().includes(filtro) || d.cod.toString().includes(filtro)).forEach(d => {
-            body.innerHTML += `
-                <tr>
-                    <td>#${d.cod}</td>
-                    <td>${d.dat.split('-').reverse().join('/')}</td>
-                    <td>${d.cli}</td>
-                    <td>${d.ser}</td>
-                    <td>R$ ${d.tot.toFixed(2)}</td>
-                    <td class="${d.saldo <= 0 ? 'status-pago' : 'status-devendo'}">R$ ${d.saldo.toFixed(2)}</td>
-                    <td><button class="btn-delete" onclick="excluir(${d.id})">🗑️</button></td>
-                </tr>
-            `;
+            body.innerHTML += `<tr><td>#${d.cod}</td><td>${d.dat.split('-').reverse().join('/')}</td><td>${d.cli}</td><td>${d.ser}</td><td>R$ ${d.tot.toFixed(2)}</td><td style="color:${d.saldo > 0 ? 'red':'green'}">R$ ${d.saldo.toFixed(2)}</td><td><button class="btn-delete" onclick="excluir(${d.id})">🗑️</button></td></tr>`;
         });
     }
 
-    function imprimirNotinha() {
-        const filtro = document.getElementById('filtro').value;
-        const filtrados = dados.filter(d => d.cli.toLowerCase().includes(filtro.toLowerCase()) || d.cod.toString() === filtro);
-        
-        if(!filtro || filtrados.length === 0) return alert("Filtre um cliente primeiro.");
-
-        let somaT = 0, somaP = 0;
-        let itens = '';
-        const agora = new Date();
-        const dataE = agora.toLocaleDateString('pt-BR') + " " + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-
-        filtrados.forEach(i => {
-            somaT += i.tot;
-            somaP += i.pag;
-            itens += `<div class="linha"><span>${i.qtd}x ${i.ser}</span><span>R$ ${i.tot.toFixed(2)}</span></div>`;
-        });
-
-        document.getElementById('areaImpressao').innerHTML = `
-            <div class="notinha">
-                <div class="notinha-logo"><img src="logomarcos.png" onerror="this.style.display='none'"></div>
-                <h3 style="text-align:center; border-bottom: 2px solid #000; padding-bottom:5px;">Extrato de Conta</h3>
-                <p style="font-size:0.85em"><strong>CÓD:</strong> #${filtrados[0].cod} | <strong>CLIENTE:</strong> ${filtrados[0].cli.toUpperCase()}</p>
-                <p style="font-size:0.85em"><strong>DATA EMISSÃO:</strong> ${dataE}</p>
-                <hr>
-                ${itens}
-                <div style="margin-top:10px; border-top: 2px solid #000; padding-top:10px; font-weight:bold;">
-                    <div class="linha"><span>SUBTOTAL:</span><span>R$ ${somaT.toFixed(2)}</span></div>
-                    <div class="linha"><span>VALOR JÁ PAGO:</span><span>R$ ${somaP.toFixed(2)}</span></div>
-                    <div class="linha" style="font-size:1.2em; border-top: 1px dashed #000; margin-top:5px; padding-top:5px;">
-                        <span>SALDO DEVEDOR:</span><span>R$ ${(somaT - somaP).toFixed(2)}</span>
-                    </div>
-                </div>
-                <p style="text-align:center; margin-top:20px; font-size:0.7em;">Criado por Marco Muniz - Todos os Direitos Reservados</p>
-            </div>
-        `;
-        window.print();
-    }
+    function excluir(id) { if(confirm("Excluir registro?")) { dados = dados.filter(d => d.id !== id); salvarEAtualizar(); } }
 
     function exportarBackup() {
-        let csv = "Codigo;Data;Cliente;Servico;Total;Pago;Saldo\n";
-        dados.forEach(d => { csv += `${d.cod};${d.dat};${d.cli};${d.ser};${d.tot};${d.pag};${d.saldo}\n`; });
+        let csv = "ID;Codigo;Cliente;Servico;Data;Total;Pago;Saldo\n";
+        dados.forEach(d => { csv += `${d.id};${d.cod};${d.cli};${d.ser};${d.dat};${d.tot};${d.pag};${d.saldo}\n`; });
         const blob = new Blob([csv], { type: 'text/csv' });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "backup_laser_muniz.csv";
+        a.download = `backup_marcos_muniz_${new Date().toLocaleDateString().replace(/\//g,'-')}.csv`;
         a.click();
+    }
+
+    function importarBackup(event) {
+        const arquivo = event.target.files[0];
+        if (!arquivo) return;
+        const leitor = new FileReader();
+        leitor.onload = function(e) {
+            const linhas = e.target.result.split('\n');
+            const novosDados = [];
+            for (let i = 1; i < linhas.length; i++) {
+                const col = linhas[i].split(';');
+                if (col.length < 8) continue;
+                novosDados.push({
+                    id: parseInt(col[0]), cod: parseInt(col[1]), cli: col[2],
+                    ser: col[3], dat: col[4], tot: parseFloat(col[5]),
+                    pag: parseFloat(col[6]), saldo: parseFloat(col[7])
+                });
+                // Recupera o código do cliente para a lista global
+                codigosClientes[col[2].toUpperCase()] = parseInt(col[1]);
+            }
+            if(confirm(`Deseja restaurar ${novosDados.length} registros? Isso substituirá os dados atuais.`)) {
+                dados = novosDados;
+                salvarEAtualizar();
+                alert("Backup restaurado com sucesso!");
+            }
+        };
+        leitor.readAsText(arquivo);
     }
 
     atualizarTabela();
