@@ -14,9 +14,9 @@
         .header-titles h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
 
         .backup-controls { display: flex; gap: 10px; }
-        .btn-backup { background: #64748b; color: white; border: none; font-size: 0.75rem; padding: 6px 12px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .btn-backup { background: #64748b; color: white; border: none; font-size: 0.75rem; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
         
-        .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8e0; }
+        .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .full-width { grid-column: 1 / -1; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
         input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
@@ -34,7 +34,14 @@
 
         .footer-site { text-align: center; padding: 20px; font-size: 0.85rem; color: #64748b; background: white; border-top: 1px solid #e2e8f0; margin-top: 20px; }
         
-        @media print { .container, .btn, .btn-delete, .search-area, .form-section, .finance-summary, .footer-site, .backup-controls { display: none !important; } .print-only { display: block !important; } .notinha { border: 1px solid #000; padding: 20px; width: 100%; max-width: 450px; margin: auto; font-family: Courier, monospace; } .linha { display: flex; justify-content: space-between; margin: 4px 0; } }
+        @media print { 
+            .container, .btn, .btn-delete, .search-area, .form-section, .finance-summary, .footer-site, .backup-controls { display: none !important; } 
+            .print-only { display: block !important; } 
+            .notinha { border: 1px solid #000; padding: 20px; width: 100%; max-width: 450px; margin: auto; font-family: Courier, monospace; } 
+            .notinha-logo { text-align: center; margin-bottom: 10px; }
+            .notinha-logo img { max-height: 60px; }
+            .linha { display: flex; justify-content: space-between; margin: 4px 0; } 
+        }
         .print-only { display: none; }
         .btn-delete { background: var(--danger); color: white; border: none; padding: 5px; border-radius: 3px; cursor: pointer; }
     </style>
@@ -46,8 +53,8 @@
         <div class="logo-container"><img src="logomarcos.png" alt="Logo" onerror="this.style.display='none'"></div>
         <div class="header-titles"><h1>Gestão Marcos Muniz - Gravações</h1></div>
         <div class="backup-controls">
-            <button class="btn-backup" onclick="exportarBackup()">💾 Salvar Backup</button>
-            <button class="btn-backup" onclick="document.getElementById('inputArquivo').click()">📂 Restaurar Backup</button>
+            <button class="btn-backup" onclick="exportarBackup()">💾 Backup</button>
+            <button class="btn-backup" onclick="document.getElementById('inputArquivo').click()">📂 Restaurar</button>
             <input type="file" id="inputArquivo" accept=".csv" style="display:none" onchange="importarBackup(event)">
         </div>
     </div>
@@ -55,18 +62,18 @@
     <div class="form-section">
         <div class="full-width"><label>Cliente</label><input type="text" id="cliente" placeholder="Nome do cliente"></div>
         <div class="full-width"><label>Serviço</label><input type="text" id="servico" placeholder="Descrição do trabalho"></div>
-        <div><label>Data Serviço</label><input type="date" id="data"></div>
+        <div><label>Data</label><input type="date" id="data"></div>
         <div><label>Qtd</label><input type="number" id="quantidade" value="1" oninput="calcularAutomatico()"></div>
-        <div><label>Valor Unit. (R$)</label><input type="number" id="valorUnitario" step="0.01" oninput="calcularAutomatico()"></div>
-        <div><label>Valor Total (R$)</label><input type="number" id="valorTotal" readonly></div>
-        <div><label>Valor Pago (R$)</label><input type="number" id="valorPago" step="0.01" value="0"></div>
+        <div><label>V. Unitário (R$)</label><input type="number" id="valorUnitario" step="0.01" oninput="calcularAutomatico()"></div>
+        <div><label>V. Total (R$)</label><input type="number" id="valorTotal" readonly></div>
+        <div><label>V. Pago (R$)</label><input type="number" id="valorPago" step="0.01" value="0"></div>
     </div>
     <button class="btn" onclick="adicionar()">Salvar Registro</button>
 
     <div class="search-area">
-        <label>🔎 Filtrar por Cliente / Código:</label>
-        <input type="text" id="filtro" placeholder="Digite nome ou código..." onkeyup="atualizarTabela()">
-        <button class="btn btn-print" onclick="imprimirNotinha()">Gerar Extrato do Cliente</button>
+        <label>🔎 Filtrar por Cliente para Extrato:</label>
+        <input type="text" id="filtro" placeholder="Digite o nome do cliente aqui..." onkeyup="atualizarTabela()">
+        <button class="btn btn-print" onclick="gerarExtrato()">Gerar Extrato do Cliente</button>
     </div>
 
     <table>
@@ -81,19 +88,18 @@
     </div>
 </div>
 
-<footer class="footer-site">Criado por <strong>Marco Muniz</strong> - <span id="dataAtual"></span></footer>
+<footer class="footer-site">Criado por <strong>Marco Muniz</strong> - Todos os Direitos Reservados.</footer>
 <div id="areaImpressao" class="print-only"></div>
 
 <script>
-    let dados = JSON.parse(localStorage.getItem('servicos_v13')) || [];
+    let dados = JSON.parse(localStorage.getItem('servicos_v14')) || [];
     let codigosClientes = JSON.parse(localStorage.getItem('codigos_clientes')) || {};
     document.getElementById('data').valueAsDate = new Date();
-    document.getElementById('dataAtual').innerText = new Date().toLocaleDateString();
 
     function calcularAutomatico() {
-        const qtd = parseFloat(document.getElementById('quantidade').value) || 0;
-        const unit = parseFloat(document.getElementById('valorUnitario').value) || 0;
-        document.getElementById('valorTotal').value = (qtd * unit).toFixed(2);
+        const q = parseFloat(document.getElementById('quantidade').value) || 0;
+        const u = parseFloat(document.getElementById('valorUnitario').value) || 0;
+        document.getElementById('valorTotal').value = (q * u).toFixed(2);
     }
 
     function adicionar() {
@@ -102,17 +108,24 @@
         const dat = document.getElementById('data').value;
         const tot = parseFloat(document.getElementById('valorTotal').value) || 0;
         const pag = parseFloat(document.getElementById('valorPago').value) || 0;
-        if(!cli || !ser || tot === 0) return alert("Preencha os valores.");
 
-        const nomeNormal = cli.trim().toUpperCase();
-        if(!codigosClientes[nomeNormal]) codigosClientes[nomeNormal] = Math.floor(1000 + Math.random() * 9000);
+        if(!cli || !ser || tot === 0) return alert("Preencha os campos corretamente.");
+
+        const nomeN = cli.trim().toUpperCase();
+        if(!codigosClientes[nomeN]) codigosClientes[nomeN] = Math.floor(1000 + Math.random() * 9000);
         
-        dados.push({ id: Date.now(), cod: codigosClientes[nomeNormal], cli, ser, dat, tot, pag, saldo: tot - pag });
-        salvarEAtualizar();
-        limparCampos();
+        dados.push({ id: Date.now(), cod: codigosClientes[nomeN], cli, ser, dat, tot, pag, saldo: tot - pag });
+        salvar();
+        limpar();
     }
 
-    function limparCampos() {
+    function salvar() {
+        localStorage.setItem('servicos_v14', JSON.stringify(dados));
+        localStorage.setItem('codigos_clientes', JSON.stringify(codigosClientes));
+        atualizarTabela();
+    }
+
+    function limpar() {
         document.getElementById('cliente').value = '';
         document.getElementById('servico').value = '';
         document.getElementById('valorUnitario').value = '';
@@ -120,14 +133,8 @@
         document.getElementById('valorPago').value = '0';
     }
 
-    function salvarEAtualizar() {
-        localStorage.setItem('servicos_v13', JSON.stringify(dados));
-        localStorage.setItem('codigos_clientes', JSON.stringify(codigosClientes));
-        atualizarTabela();
-    }
-
     function atualizarTabela() {
-        const filtro = document.getElementById('filtro').value.toLowerCase();
+        const f = document.getElementById('filtro').value.toLowerCase();
         const body = document.getElementById('tabelaBody');
         body.innerHTML = '';
         let sP = 0, sG = 0;
@@ -137,12 +144,43 @@
         document.getElementById('totalAberto').innerText = `R$ ${(sG - sP).toFixed(2)}`;
         document.getElementById('totalGeral').innerText = `R$ ${sG.toFixed(2)}`;
 
-        dados.filter(d => d.cli.toLowerCase().includes(filtro) || d.cod.toString().includes(filtro)).forEach(d => {
+        dados.filter(d => d.cli.toLowerCase().includes(f)).forEach(d => {
             body.innerHTML += `<tr><td>#${d.cod}</td><td>${d.dat.split('-').reverse().join('/')}</td><td>${d.cli}</td><td>${d.ser}</td><td>R$ ${d.tot.toFixed(2)}</td><td style="color:${d.saldo > 0 ? 'red':'green'}">R$ ${d.saldo.toFixed(2)}</td><td><button class="btn-delete" onclick="excluir(${d.id})">🗑️</button></td></tr>`;
         });
     }
 
-    function excluir(id) { if(confirm("Excluir registro?")) { dados = dados.filter(d => d.id !== id); salvarEAtualizar(); } }
+    function gerarExtrato() {
+        const f = document.getElementById('filtro').value;
+        const filtrados = dados.filter(d => d.cli.toLowerCase().includes(f.toLowerCase()));
+        
+        if(!f || filtrados.length === 0) return alert("Digite o nome do cliente no campo de busca.");
+
+        let sT = 0, sP = 0, itens = '';
+        filtrados.forEach(i => {
+            sT += i.tot; sP += i.pag;
+            itens += `<div class="linha"><span>${i.ser} (${i.dat.split('-').reverse().join('/')})</span><span>R$ ${i.tot.toFixed(2)}</span></div>`;
+        });
+
+        document.getElementById('areaImpressao').innerHTML = `
+            <div class="notinha">
+                <div class="notinha-logo"><img src="logomarcos.png" onerror="this.style.display='none'"></div>
+                <h3 style="text-align:center;">EXTRATO DE CONTA</h3>
+                <p><strong>CLIENTE:</strong> ${filtrados[0].cli.toUpperCase()}</p>
+                <hr>
+                ${itens}
+                <div style="margin-top:10px; border-top: 1px solid #000; padding-top:10px;">
+                    <div class="linha"><strong>SUBTOTAL:</strong><span>R$ ${sT.toFixed(2)}</span></div>
+                    <div class="linha"><strong>VALOR PAGO:</strong><span>R$ ${sP.toFixed(2)}</span></div>
+                    <div class="linha" style="font-size:1.2em; border-top: 1px dashed #000; margin-top:5px;">
+                        <strong>SALDO DEVEDOR:</strong><span>R$ ${(sT - sP).toFixed(2)}</span>
+                    </div>
+                </div>
+                <p style="text-align:center; font-size:0.7em; margin-top:20px;">Criado por Marco Muniz - Todos os Direitos Reservados</p>
+            </div>`;
+        window.print();
+    }
+
+    function excluir(id) { if(confirm("Excluir?")) { dados = dados.filter(d => d.id !== id); salvar(); } }
 
     function exportarBackup() {
         let csv = "ID;Codigo;Cliente;Servico;Data;Total;Pago;Saldo\n";
@@ -150,35 +188,24 @@
         const blob = new Blob([csv], { type: 'text/csv' });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = `backup_marcos_muniz_${new Date().toLocaleDateString().replace(/\//g,'-')}.csv`;
+        a.download = `backup_marcos_muniz.csv`;
         a.click();
     }
 
     function importarBackup(event) {
-        const arquivo = event.target.files[0];
-        if (!arquivo) return;
-        const leitor = new FileReader();
-        leitor.onload = function(e) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
             const linhas = e.target.result.split('\n');
-            const novosDados = [];
+            const novos = [];
             for (let i = 1; i < linhas.length; i++) {
-                const col = linhas[i].split(';');
-                if (col.length < 8) continue;
-                novosDados.push({
-                    id: parseInt(col[0]), cod: parseInt(col[1]), cli: col[2],
-                    ser: col[3], dat: col[4], tot: parseFloat(col[5]),
-                    pag: parseFloat(col[6]), saldo: parseFloat(col[7])
-                });
-                // Recupera o código do cliente para a lista global
-                codigosClientes[col[2].toUpperCase()] = parseInt(col[1]);
+                const c = linhas[i].split(';');
+                if (c.length < 8) continue;
+                novos.push({ id: parseInt(c[0]), cod: parseInt(c[1]), cli: c[2], ser: c[3], dat: c[4], tot: parseFloat(c[5]), pag: parseFloat(c[6]), saldo: parseFloat(c[7]) });
+                codigosClientes[c[2].toUpperCase()] = parseInt(c[1]);
             }
-            if(confirm(`Deseja restaurar ${novosDados.length} registros? Isso substituirá os dados atuais.`)) {
-                dados = novosDados;
-                salvarEAtualizar();
-                alert("Backup restaurado com sucesso!");
-            }
+            if(confirm("Restaurar dados?")) { dados = novos; salvar(); }
         };
-        leitor.readAsText(arquivo);
+        reader.readAsText(event.target.files[0]);
     }
 
     atualizarTabela();
