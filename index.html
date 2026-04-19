@@ -11,39 +11,26 @@
         :root { --primary: #1e40af; --accent: #3b82f6; --bg: #f1f5f9; --text: #0f172a; --danger: #ef4444; --success: #059669; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
         .container { max-width: 1150px; margin: 20px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; }
-        
         .header-site { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
         .logo-container { display: flex; align-items: center; gap: 15px; }
         .logo-container img { max-height: 60px; width: auto; }
         .brand-name { font-size: 1.6rem; font-weight: bold; color: var(--primary); }
-        
         .header-actions { display: flex; align-items: center; gap: 10px; }
-        
         .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .full-width { grid-column: 1 / -1; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
         input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
-        input:focus { border-color: var(--accent); outline: none; background: #fff; }
-        
         .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
         .btn-print { background: var(--success); }
         .btn-backup { background: #1e293b; font-size: 0.75rem; padding: 8px 12px; width: auto; margin: 0; }
         .btn-delete { background: var(--danger); color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; }
-
         .search-area { margin: 25px 0; padding: 15px; background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
         th { background: #f1f5f9; }
-
         .finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; padding: 20px; background: #1e293b; color: white; border-radius: 8px; }
         .summary-card p { margin: 5px 0 0; font-size: 1.4rem; font-weight: bold; }
-
-        @media print { 
-            .container, .btn, .search-area, .form-section, .finance-summary, .header-actions { display: none !important; } 
-            .print-only { display: block !important; } 
-            .notinha { border: 1px solid #000; padding: 20px; width: 100%; max-width: 550px; margin: auto; font-family: Courier, monospace; } 
-            .linha { display: flex; justify-content: space-between; margin: 5px 0; }
-        }
+        @media print { .container, .btn, .search-area, .form-section, .finance-summary, .header-actions { display: none !important; } .print-only { display: block !important; } .notinha { border: 1px solid #000; padding: 20px; width: 100%; max-width: 550px; margin: auto; font-family: Courier, monospace; } .linha { display: flex; justify-content: space-between; margin: 5px 0; } }
         .print-only { display: none; }
     </style>
 </head>
@@ -55,9 +42,8 @@
             <img src="logomarcos.png" alt="Logo" onerror="this.style.display='none'">
             <span class="brand-name">Gestão Marcos Muniz</span>
         </div>
-        
         <div class="header-actions">
-            <span id="status-cloud" style="color: var(--success); font-size: 0.8rem; font-weight: bold; margin-right: 10px;">● ONLINE</span>
+            <span id="status-cloud" style="color: var(--success); font-size: 0.8rem; font-weight: bold;">● ONLINE</span>
             <button class="btn btn-backup" onclick="exportarBackup()">💾 Backup CSV</button>
             <button class="btn btn-backup" style="background:#64748b" onclick="document.getElementById('inputArquivo').click()">📂 Restaurar</button>
             <input type="file" id="inputArquivo" accept=".csv" style="display:none" onchange="importarBackup(event)">
@@ -108,12 +94,12 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('servicos_cloud');
     let dadosLocais = [];
-    let mapaClientes = {}; // Guarda a relação Código -> Nome
+    let mapaClientes = {};
 
     document.getElementById('data').valueAsDate = new Date();
 
     function formatarMoeda(valor) {
-        return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return parseFloat(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function calcular() {
@@ -122,12 +108,9 @@
         document.getElementById('valorTotal').value = (q * u).toFixed(2);
     }
 
-    // Função que busca o nome assim que você digita o código
     function buscarClientePorCodigo() {
         const cod = document.getElementById('codCliente').value;
-        if (mapaClientes[cod]) {
-            document.getElementById('cliente').value = mapaClientes[cod];
-        }
+        if (mapaClientes[cod]) document.getElementById('cliente').value = mapaClientes[cod];
     }
 
     function adicionar() {
@@ -140,8 +123,9 @@
 
         if(!cli || !ser || !cod) return alert("Preencha Código, Cliente e Serviço.");
 
-        db.push({ cod, cli, ser, dat, tot, pag, timestamp: Date.now() });
-        limpar();
+        db.push({ cod, cli, ser, dat, tot, pag, timestamp: Date.now() }).then(() => {
+            limpar();
+        });
     }
 
     function limpar() {
@@ -153,19 +137,29 @@
         document.getElementById('valorPago').value = '0';
     }
 
+    // LISTENER EM TEMPO REAL - ESSA PARTE FAZ APARECER NA LISTA
     db.on('value', (snapshot) => {
         dadosLocais = [];
         mapaClientes = {}; 
         snapshot.forEach((child) => {
             const item = child.val();
-            dadosLocais.push({ id: child.key, ...item });
-            // Alimenta o mapa de códigos para preenchimento automático
-            if(item.cod && item.cli) mapaClientes[item.cod] = item.cli;
+            // Correção de compatibilidade caso existam nomes de campos diferentes no banco
+            const registro = {
+                id: child.key,
+                cod: item.cod || item.codigo || "",
+                cli: item.cli || item.cliente || "",
+                ser: item.ser || item.servico || "",
+                dat: item.dat || item.data || "",
+                tot: parseFloat(item.tot || item.total || 0),
+                pag: parseFloat(item.pag || item.pago || item.valorPago || 0)
+            };
+            dadosLocais.push(registro);
+            if(registro.cod && registro.cli) mapaClientes[registro.cod] = registro.cli;
         });
         atualizarTabela();
     });
 
-    function excluir(id) { if(confirm("Remover permanentemente?")) db.child(id).remove(); }
+    function excluir(id) { if(confirm("Remover do servidor?")) db.child(id).remove(); }
 
     function atualizarTabela() {
         const f = document.getElementById('filtro').value.toLowerCase();
@@ -173,37 +167,38 @@
         body.innerHTML = '';
         let sP = 0, sT = 0;
 
-        dadosLocais.forEach(d => { sP += (d.pag || 0); sT += (d.tot || 0); });
-        document.getElementById('totalRecebido').innerText = `R$ ${formatarMoeda(sP)}`;
-        document.getElementById('totalAberto').innerText = `R$ ${formatarMoeda(sT - sP)}`;
+        // Filtra e ordena (mais recentes primeiro)
+        const filtrados = dadosLocais.filter(d => 
+            d.cli.toLowerCase().includes(f) || (d.cod && d.cod.toString().includes(f))
+        ).reverse();
 
-        dadosLocais.filter(d => 
-            d.cli.toLowerCase().includes(f) || 
-            (d.cod && d.cod.toString().includes(f))
-        ).reverse().forEach(d => {
+        filtrados.forEach(d => {
+            sP += d.pag; 
+            sT += d.tot;
             body.innerHTML += `<tr>
-                <td>#${d.cod || '---'}</td>
+                <td>#${d.cod}</td>
                 <td>${d.dat.split('-').reverse().join('/')}</td>
                 <td>${d.cli}</td>
                 <td>${d.ser}</td>
-                <td>R$ ${formatarMoeda(d.tot || 0)}</td>
-                <td>R$ ${formatarMoeda(d.pag || 0)}</td>
+                <td>R$ ${formatarMoeda(d.tot)}</td>
+                <td>R$ ${formatarMoeda(d.pag)}</td>
                 <td><button class="btn-delete" onclick="excluir('${d.id}')">🗑️</button></td>
             </tr>`;
         });
+
+        document.getElementById('totalRecebido').innerText = `R$ ${formatarMoeda(sP)}`;
+        document.getElementById('totalAberto').innerText = `R$ ${formatarMoeda(sT - sP)}`;
     }
 
     function gerarExtrato() {
         const f = document.getElementById('filtro').value.toLowerCase();
         const filtrados = dadosLocais.filter(d => d.cli.toLowerCase().includes(f) || (d.cod && d.cod.toString() === f));
-        if(!f || filtrados.length === 0) return alert("Busque um cliente pelo nome ou código exato.");
+        if(!f || filtrados.length === 0) return alert("Busque um cliente primeiro.");
 
         let sT = 0, sP = 0, itens = '';
         filtrados.sort((a,b) => new Date(a.dat) - new Date(b.dat)).forEach(i => {
-            sT += (i.tot || 0); sP += (i.pag || 0);
-            const desc = i.ser.toUpperCase() === 'PAGAMENTO' ? 'PAGAMENTO RECEBIDO' : i.ser;
-            const valor = (i.tot > 0) ? i.tot : i.pag;
-            itens += `<div class="linha"><span>${desc} (${i.dat.split('-').reverse().join('/')})</span><span>R$ ${formatarMoeda(valor)}</span></div>`;
+            sT += i.tot; sP += i.pag;
+            itens += `<div class="linha"><span>${i.ser} (${i.dat.split('-').reverse().join('/')})</span><span>R$ ${formatarMoeda(i.tot || i.pag)}</span></div>`;
         });
 
         document.getElementById('areaImpressao').innerHTML = `
@@ -233,14 +228,12 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             const linhas = e.target.result.split('\n');
-            if(confirm("Importar dados para o servidor?")) {
-                for (let i = 1; i < linhas.length; i++) {
-                    const c = linhas[i].split(';');
-                    if (c.length < 6) continue;
-                    db.push({ cod: c[0], cli: c[1], ser: c[2], dat: c[3], tot: parseFloat(c[4]), pag: parseFloat(c[5]) });
-                }
-                alert("Importação concluída!");
+            for (let i = 1; i < linhas.length; i++) {
+                const c = linhas[i].split(';');
+                if (c.length < 6) continue;
+                db.push({ cod: c[0], cli: c[1], ser: c[2], dat: c[3], tot: parseFloat(c[4]), pag: parseFloat(c[5]) });
             }
+            alert("Importação concluída!");
         };
         reader.readAsText(event.target.files[0]);
     }
