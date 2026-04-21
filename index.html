@@ -86,7 +86,7 @@
 
 <footer class="site-footer no-print">
     Todos os Direitos reservados. Marcos Muniz - Gravações a Laser. <br>
-    Criado em: 19/04/2026
+    Criado em: 21/04/2026
 </footer>
 
 <div id="areaPrint"></div>
@@ -165,16 +165,19 @@
 
     function listar() {
         const f = document.getElementById('busca').value.toLowerCase();
-        const h = db.filter(r => r.cli.toLowerCase().includes(f) || r.cod.includes(f)).reverse().map(r => `
-            <tr>
-                <td>#${r.cod}</td><td>${r.dat.split('-').reverse().join('/')}</td>
-                <td>${r.cli}</td><td>${r.ser}</td>
-                <td>R$ ${m(r.vto)}</td><td>R$ ${m(r.vpa)}</td>
-                <td>
-                    <button class="btn-action btn-edit" onclick="editar(${r.id})">📝</button>
-                    <button class="btn-action btn-del" onclick="del(${r.id})">🗑️</button>
-                </td>
-            </tr>`).join('');
+        // Organiza por data decrescente (mais recente primeiro)
+        const h = db.filter(r => r.cli.toLowerCase().includes(f) || r.cod.includes(f))
+            .sort((a,b) => b.dat.localeCompare(a.dat))
+            .map(r => `
+                <tr>
+                    <td>#${r.cod}</td><td>${r.dat.split('-').reverse().join('/')}</td>
+                    <td>${r.cli}</td><td>${r.ser}</td>
+                    <td>R$ ${m(r.vto)}</td><td>R$ ${m(r.vpa)}</td>
+                    <td>
+                        <button class="btn-action btn-edit" onclick="editar(${r.id})">📝</button>
+                        <button class="btn-action btn-del" onclick="del(${r.id})">🗑️</button>
+                    </td>
+                </tr>`).join('');
         document.getElementById('corpo').innerHTML = h;
     }
 
@@ -201,11 +204,12 @@
         }
 
         let sT = 0, sP = 0;
+        // Organiza por data crescente para o extrato de impressão
         const linhas = lista.sort((a,b) => a.dat.localeCompare(b.dat)).map(r => {
             if(r.ser.toLowerCase().includes("pagamento")) { sP += (r.vto + r.vpa); } 
             else { sT += r.vto; sP += r.vpa; }
             return `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px 0; font-size:12px;">
-                <span>${r.dat.split('-').reverse().join('/')} - ${r.cli.substring(0,15)} - ${r.ser}</span>
+                <span>${r.dat.split('-').reverse().join('/')} - ${r.cli.substring(0,20)} - ${r.ser}</span>
                 <span>R$ ${m(r.vto + r.vpa)}</span>
             </div>`;
         }).join('');
@@ -222,7 +226,7 @@
                     <p>TOTAL PAGO: R$ ${m(sP)}</p>
                     <h3 style="background:#f1f5f9; padding:10px; display:inline-block;">SALDO: R$ ${m(sT - sP)}</h3>
                 </div>
-                <div style="margin-top:40px; text-align:center; font-size:12px;">Marcos Muniz - Obrigado pela Preferência!</div>
+                <div style="margin-top:40px; text-align:center; font-size:12px; font-weight:bold;">Marcos Muniz - Obrigado pela Preferência!</div>
             </div>`;
         
         const w = window.open('', '');
