@@ -3,32 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão Marcos Muniz</title>
+    <title>Gestão Marcos Muniz - Sistema Completo</title>
     <style>
-        :root { --primary: #1e40af; --success: #059669; --danger: #ef4444; --bg: #f1f5f9; --edit: #2563eb; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 20px; display: flex; flex-direction: column; min-height: 95vh; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex: 1; }
+        :root { 
+            --primary: #1e40af; 
+            --success: #059669; 
+            --warning: #d97706;
+            --danger: #ef4444; 
+            --bg: #f1f5f9; 
+            --edit: #2563eb; 
+        }
         
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 15px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 20px; display: flex; flex-direction: column; min-height: 95vh; margin: 0; }
+        .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex: 1; width: 100%; box-sizing: border-box; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .logo-area { font-weight: bold; color: var(--primary); font-size: 24px; }
         
+        /* Dashboard */
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .dash-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; text-align: center; border-left: 5px solid var(--primary); }
+        .dash-card:nth-child(2) { border-left-color: var(--success); }
+        .dash-card:nth-child(3) { border-left-color: #0284c7; }
+        .dash-title { font-size: 0.85rem; color: #64748b; font-weight: bold; text-transform: uppercase; }
+        .dash-value { font-size: 1.6rem; font-weight: bold; color: #1e293b; margin-top: 5px; }
+
+        /* Formulário */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
-        label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; color: #475569; }
-        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
+        label { display: block; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; color: #475569; }
+        input, select, textarea { width: 100%; padding: 9px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 0.9rem; }
         
-        .btn { padding: 12px; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-save { background: var(--primary); width: 100%; margin-top: 15px; font-size: 1rem; }
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-save { background: var(--primary); width: 100%; margin-top: 15px; font-size: 1rem; padding: 12px; }
+        .btn-excel { background: #15803d; }
         .btn-aux { background: #475569; font-size: 0.8rem; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.9rem; }
-        th, td { border-bottom: 1px solid #e2e8f0; padding: 12px; text-align: left; }
-        th { background: #f1f5f9; }
+        /* Tabela e Status */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85rem; }
+        th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: left; }
+        th { background: #f1f5f9; color: #334155; }
         
-        .btn-action { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; }
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; text-align: center; display: inline-block; }
+        .status-pago { background: #d1fae5; color: #065f46; }
+        .status-parcial { background: #fef3c7; color: #92400e; }
+        .status-pendente { background: #fee2e2; color: #991b1b; }
+
+        .btn-action { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 4px; }
         .btn-edit { color: var(--edit); }
         .btn-del { color: var(--danger); }
+        .btn-wsp { color: #25d366; font-size: 1.1rem; text-decoration: none; }
 
-        .reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .reports-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 25px; }
         .report-box { padding: 15px; background: #eff6ff; border-radius: 8px; border: 1px solid #dbeafe; }
         
         .site-footer { text-align: center; padding: 20px; font-size: 0.85rem; color: #64748b; margin-top: 20px; }
@@ -41,30 +66,63 @@
 <div class="container no-print">
     <div class="header">
         <div class="logo-area">MARCOS MUNIZ</div>
-        <div style="display:flex; gap:10px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-excel" onclick="exportarExcel()">📊 Excel Profissional</button>
             <button class="btn btn-aux" onclick="exportar()">💾 Backup</button>
             <button class="btn btn-aux" onclick="document.getElementById('fileIn').click()">📂 Restaurar</button>
             <input type="file" id="fileIn" style="display:none" onchange="importar(event)">
         </div>
     </div>
 
+    <!-- Dashboard Topo -->
+    <div class="dash-grid">
+        <div class="dash-card">
+            <div class="dash-title">Clientes Cadastrados</div>
+            <div class="dash-value" id="dashClientes">0</div>
+        </div>
+        <div class="dash-card">
+            <div class="dash-title">Serviços Realizados</div>
+            <div class="dash-value" id="dashServicos">0</div>
+        </div>
+        <div class="dash-card">
+            <div class="dash-title">Total Recebido</div>
+            <div class="dash-value" id="dashRecebido">R$ 0,00</div>
+        </div>
+    </div>
+
+    <!-- Cadastro -->
     <div class="grid">
         <div><label>Cód. Cliente</label><input type="text" id="cod" onkeyup="auto()"></div>
         <div style="grid-column: span 2;"><label>Nome do Cliente</label><input type="text" id="cli"></div>
+        <div><label>Telefone</label><input type="text" id="tel" placeholder="(00) 0000-0000"></div>
+        <div><label>WhatsApp</label><input type="text" id="wsp" placeholder="38999999999"></div>
         <div style="grid-column: span 2;"><label>Serviço / Produto</label><input type="text" id="ser"></div>
         <div><label>Data</label><input type="date" id="dat"></div>
         <div><label>Qtd</label><input type="number" id="qtd" value="1" oninput="calc()"></div>
         <div><label>V. Unit (R$)</label><input type="text" id="vun" oninput="calc()"></div>
         <div><label>V. Total (R$)</label><input type="text" id="vto" readonly></div>
         <div><label>V. Pago (R$)</label><input type="text" id="vpa" value="0"></div>
+        <div>
+            <label>Forma de Pagamento</label>
+            <select id="fpa">
+                <option value="PIX">PIX</option>
+                <option value="Dinheiro">Dinheiro</option>
+                <option value="Cartão de Crédito">Cartão de Crédito</option>
+                <option value="Cartão de Débito">Cartão de Débito</option>
+                <option value="Transferência">Transferência</option>
+                <option value="Boleto">Boleto</option>
+            </select>
+        </div>
+        <div style="grid-column: span 3;"><label>Observação</label><input type="text" id="obs" placeholder="Detalhes opcionais..."></div>
     </div>
 
     <button class="btn btn-save" onclick="salvar()">Salvar Registro</button>
 
+    <!-- Relatórios & Filtros -->
     <div class="reports-grid">
         <div class="report-box">
-            <label>🔎 Extrato por Cliente:</label>
-            <input type="text" id="busca" placeholder="Nome ou código..." onkeyup="listar()">
+            <label>🔎 Filtro Geral (Cliente, Código, Serviço):</label>
+            <input type="text" id="busca" placeholder="Digite para filtrar a tabela..." onkeyup="listar()">
             <button class="btn" style="background:var(--success); width:100%; margin-top:10px;" onclick="imprimir('cliente')">Gerar Extrato do Cliente</button>
         </div>
         
@@ -78,16 +136,20 @@
         </div>
     </div>
 
+    <!-- Tabela -->
     <table>
         <thead>
             <tr>
                 <th>Cód.</th>
                 <th>Data</th>
                 <th>Cliente</th>
+                <th>Contato</th>
                 <th>Serviço</th>
                 <th>Qtd</th>
                 <th>Total</th>
                 <th>Pago</th>
+                <th>Pagamento</th>
+                <th>Situação</th>
                 <th>Ação</th>
             </tr>
         </thead>
@@ -96,8 +158,7 @@
 </div>
 
 <footer class="site-footer no-print">
-    Todos os Direitos reservados. Marcos Muniz - Gravações a Laser. <br>
-    Criado em: 25/04/2026
+    Todos os Direitos reservados. Marcos Muniz - Gravações a Laser.
 </footer>
 
 <script>
@@ -119,7 +180,11 @@
     function auto() {
         const c = document.getElementById('cod').value;
         const f = db.find(r => r.cod === c);
-        if(f) document.getElementById('cli').value = f.cli;
+        if(f) {
+            document.getElementById('cli').value = f.cli || '';
+            document.getElementById('tel').value = f.tel || '';
+            document.getElementById('wsp').value = f.wsp || '';
+        }
     }
 
     function salvar() {
@@ -127,14 +192,18 @@
             id: editId || Date.now(),
             cod: document.getElementById('cod').value,
             cli: document.getElementById('cli').value,
+            tel: document.getElementById('tel').value,
+            wsp: document.getElementById('wsp').value,
             ser: document.getElementById('ser').value,
             dat: document.getElementById('dat').value,
             qtd: n(document.getElementById('qtd').value),
             vto: n(document.getElementById('vto').value),
-            vpa: n(document.getElementById('vpa').value)
+            vpa: n(document.getElementById('vpa').value),
+            fpa: document.getElementById('fpa').value,
+            obs: document.getElementById('obs').value
         };
 
-        if(!r.cli || !r.ser) return;
+        if(!r.cli || !r.ser) return alert("Preencha ao menos o Nome do Cliente e o Serviço.");
 
         if(editId) {
             db = db.map(item => item.id === editId ? r : item);
@@ -151,47 +220,95 @@
     function limparCampos() {
         document.getElementById('cod').value = "";
         document.getElementById('cli').value = "";
+        document.getElementById('tel').value = "";
+        document.getElementById('wsp').value = "";
         document.getElementById('ser').value = "";
         document.getElementById('vun').value = "";
         document.getElementById('vto').value = "";
         document.getElementById('vpa').value = "0";
         document.getElementById('qtd').value = "1";
+        document.getElementById('obs').value = "";
         document.getElementById('dat').valueAsDate = new Date();
     }
 
     function editar(id) {
         const r = db.find(item => item.id === id);
         if(r) {
-            document.getElementById('cod').value = r.cod;
-            document.getElementById('cli').value = r.cli;
-            document.getElementById('ser').value = r.ser;
+            document.getElementById('cod').value = r.cod || '';
+            document.getElementById('cli').value = r.cli || '';
+            document.getElementById('tel').value = r.tel || '';
+            document.getElementById('wsp').value = r.wsp || '';
+            document.getElementById('ser').value = r.ser || '';
             document.getElementById('dat').value = r.dat;
-            document.getElementById('qtd').value = r.qtd;
-            document.getElementById('vto').value = r.vto.toFixed(2).replace('.', ',');
-            document.getElementById('vpa').value = r.vpa;
+            document.getElementById('qtd').value = r.qtd || 1;
+            document.getElementById('vto').value = (r.vto || 0).toFixed(2).replace('.', ',');
+            document.getElementById('vpa').value = r.vpa || 0;
+            document.getElementById('fpa').value = r.fpa || 'PIX';
+            document.getElementById('obs').value = r.obs || '';
             editId = id;
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
     }
 
+    function getSituacao(vto, vpa) {
+        if(vpa >= vto && vto > 0) return { label: 'Pago', class: 'status-pago' };
+        if(vpa > 0 && vpa < vto) return { label: 'Parcial', class: 'status-parcial' };
+        return { label: 'Pendente', class: 'status-pendente' };
+    }
+
+    function atualizarDashboard() {
+        const clientesUnicos = new Set(db.map(r => r.cli.toLowerCase().trim())).size;
+        const totalServicos = db.reduce((acc, r) => acc + (r.qtd || 1), 0);
+        const totalRecebido = db.reduce((acc, r) => acc + (r.vpa || 0), 0);
+
+        document.getElementById('dashClientes').innerText = clientesUnicos;
+        document.getElementById('dashServicos').innerText = totalServicos;
+        document.getElementById('dashRecebido').innerText = 'R$ ' + m(totalRecebido);
+    }
+
     function listar() {
         const f = document.getElementById('busca').value.toLowerCase();
-        const h = db.filter(r => r.cli.toLowerCase().includes(f) || r.cod.includes(f))
-            .sort((a,b) => b.dat.localeCompare(a.dat))
-            .map(r => `
+        
+        const filtrados = db.filter(r => 
+            (r.cli && r.cli.toLowerCase().includes(f)) || 
+            (r.cod && r.cod.toLowerCase().includes(f)) ||
+            (r.ser && r.ser.toLowerCase().includes(f)) ||
+            (r.dat && r.dat.includes(f))
+        ).sort((a,b) => b.dat.localeCompare(a.dat));
+
+        const h = filtrados.map(r => {
+            const sit = getSituacao(r.vto, r.vpa);
+            const wspLink = r.wsp ? `<a href="https://wa.me/55${r.wsp.replace(/\D/g,'')}" target="_blank" class="btn-wsp" title="Abrir WhatsApp">💬</a>` : '';
+            return `
                 <tr>
-                    <td>#${r.cod}</td><td>${r.dat.split('-').reverse().join('/')}</td>
-                    <td>${r.cli}</td><td>${r.ser}</td><td>${r.qtd}</td>
-                    <td>R$ ${m(r.vto)}</td><td>R$ ${m(r.vpa)}</td>
+                    <td>#${r.cod || ''}</td>
+                    <td>${r.dat ? r.dat.split('-').reverse().join('/') : ''}</td>
+                    <td><strong>${r.cli}</strong></td>
+                    <td>${wspLink} ${r.tel || r.wsp || '-'}</td>
+                    <td>${r.ser} ${r.obs ? `<br><small style="color:#64748b;">(${r.obs})</small>` : ''}</td>
+                    <td>${r.qtd || 1}</td>
+                    <td>R$ ${m(r.vto || 0)}</td>
+                    <td>R$ ${m(r.vpa || 0)}</td>
+                    <td>${r.fpa || 'PIX'}</td>
+                    <td><span class="status-badge ${sit.class}">${sit.label}</span></td>
                     <td>
                         <button class="btn-action btn-edit" onclick="editar(${r.id})">📝</button>
                         <button class="btn-action btn-del" onclick="del(${r.id})">🗑️</button>
                     </td>
-                </tr>`).join('');
+                </tr>`;
+        }).join('');
+
         document.getElementById('corpo').innerHTML = h;
+        atualizarDashboard();
     }
 
-    function del(id) { if(confirm("Excluir?")) { db = db.filter(r => r.id !== id); localStorage.setItem('muniz_data', JSON.stringify(db)); listar(); } }
+    function del(id) { 
+        if(confirm("Tem certeza que deseja excluir este registro?")) { 
+            db = db.filter(r => r.id !== id); 
+            localStorage.setItem('muniz_data', JSON.stringify(db)); 
+            listar(); 
+        } 
+    }
 
     function imprimir(tipo) {
         let lista = [];
@@ -200,10 +317,10 @@
 
         if(tipo === 'cliente') {
             const f = document.getElementById('busca').value;
-            lista = db.filter(r => r.cli.toLowerCase().includes(f.toLowerCase()) || r.cod === f);
-            if(!lista.length) return;
+            lista = db.filter(r => (r.cli && r.cli.toLowerCase().includes(f.toLowerCase())) || r.cod === f);
+            if(!lista.length) return alert("Cliente não encontrado.");
             titulo = "EXTRATO DO CLIENTE";
-            subtitulo = `CLIENTE: ${lista[0].cli} (#${lista[0].cod})`;
+            subtitulo = `CLIENTE: ${lista[0].cli} (#${lista[0].cod || ''})`;
         } else {
             const ini = document.getElementById('dataInicio').value;
             const fim = document.getElementById('dataFim').value;
@@ -215,13 +332,13 @@
 
         let sT = 0, sP = 0;
         const linhas = lista.sort((a,b) => a.dat.localeCompare(b.dat)).map(r => {
-            if(r.ser.toLowerCase().includes("pagamento")) { sP += (r.vto + r.vpa); } 
-            else { sT += r.vto; sP += r.vpa; }
+            sT += r.vto || 0; 
+            sP += r.vpa || 0;
             return `
             <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:8px 0; font-size:12px;">
                 <span style="flex:1;">${r.dat.split('-').reverse().join('/')}</span>
-                <span style="flex:3;">${r.qtd}x ${r.ser}</span>
-                <span style="flex:1; text-align:right;">R$ ${m(r.vto + r.vpa)}</span>
+                <span style="flex:3;">${r.qtd || 1}x ${r.ser}</span>
+                <span style="flex:1; text-align:right;">R$ ${m(r.vto || 0)}</span>
             </div>`;
         }).join('');
 
@@ -247,6 +364,25 @@
         w.document.write(`<html><body style="margin:0;">${html}</body></html>`);
         w.document.close();
         setTimeout(() => { w.print(); w.close(); }, 500);
+    }
+
+    function exportarExcel() {
+        if(!db.length) return alert("Não há dados para exportar.");
+
+        let csv = '\uFEFF'; // UTF-8 BOM para abrir acentos corretamente no Excel
+        csv += "Código;Data;Cliente;Telefone;WhatsApp;Serviço;Quantidade;Valor Total (R$);Valor Pago (R$);Forma Pagamento;Situação;Observação\n";
+
+        db.forEach(r => {
+            const sit = getSituacao(r.vto, r.vpa).label;
+            const dataFmt = r.dat ? r.dat.split('-').reverse().join('/') : '';
+            csv += `"${r.cod || ''}";"${dataFmt}";"${r.cli || ''}";"${r.tel || ''}";"${r.wsp || ''}";"${r.ser || ''}";"${r.qtd || 1}";"${m(r.vto || 0)}";"${m(r.vpa || 0)}";"${r.fpa || ''}";"${sit}";"${r.obs || ''}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Relatorio_Marcos_Muniz_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
     }
 
     function exportar() {
